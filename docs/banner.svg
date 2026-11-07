@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="560" viewBox="0 0 1600 560" role="img" aria-label="البصرة — حيث يلتقي النهران">
+  <defs>
+    <pattern id="lat" width="64" height="64" patternUnits="userSpaceOnUse">
+      <rect width="64" height="64" fill="#BF9E66"/>
+      <g fill="#B5944F">
+        <rect x="16" y="16" width="32" height="32"/>
+        <rect x="16" y="16" width="32" height="32" transform="rotate(45 32 32)"/>
+        <path d="M0 0h9L0 9zM64 0v9l-9-9zM0 64v-9l9 9zM64 64h-9l9-9z"/>
+      </g>
+      <circle cx="32" cy="32" r="8" fill="#BF9E66"/>
+      <circle cx="32" cy="32" r="3.5" fill="#B5944F"/>
+    </pattern>
+    <pattern id="wave" width="60" height="30" patternUnits="userSpaceOnUse">
+      <rect width="60" height="30" fill="#ffffff"/>
+      <g>
+        <circle cx="0" cy="30" r="15" fill="#F4ECDA"/><circle cx="0" cy="30" r="11" fill="#fff"/><circle cx="0" cy="30" r="7" fill="#F4ECDA"/><circle cx="0" cy="30" r="3" fill="#fff"/>
+        <circle cx="30" cy="30" r="15" fill="#F4ECDA"/><circle cx="30" cy="30" r="11" fill="#fff"/><circle cx="30" cy="30" r="7" fill="#F4ECDA"/><circle cx="30" cy="30" r="3" fill="#fff"/>
+        <circle cx="60" cy="30" r="15" fill="#F4ECDA"/><circle cx="60" cy="30" r="11" fill="#fff"/><circle cx="60" cy="30" r="7" fill="#F4ECDA"/><circle cx="60" cy="30" r="3" fill="#fff"/>
+        <circle cx="15" cy="15" r="15" fill="#F4ECDA"/><circle cx="15" cy="15" r="11" fill="#fff"/><circle cx="15" cy="15" r="7" fill="#F4ECDA"/><circle cx="15" cy="15" r="3" fill="#fff"/>
+        <circle cx="45" cy="15" r="15" fill="#F4ECDA"/><circle cx="45" cy="15" r="11" fill="#fff"/><circle cx="45" cy="15" r="7" fill="#F4ECDA"/><circle cx="45" cy="15" r="3" fill="#fff"/>
+        <circle cx="0" cy="0" r="15" fill="#F4ECDA"/><circle cx="0" cy="0" r="11" fill="#fff"/><circle cx="0" cy="0" r="7" fill="#F4ECDA"/><circle cx="0" cy="0" r="3" fill="#fff"/>
+        <circle cx="30" cy="0" r="15" fill="#F4ECDA"/><circle cx="30" cy="0" r="11" fill="#fff"/><circle cx="30" cy="0" r="7" fill="#F4ECDA"/><circle cx="30" cy="0" r="3" fill="#fff"/>
+        <circle cx="60" cy="0" r="15" fill="#F4ECDA"/><circle cx="60" cy="0" r="11" fill="#fff"/><circle cx="60" cy="0" r="7" fill="#F4ECDA"/><circle cx="60" cy="0" r="3" fill="#fff"/>
+      </g>
+    </pattern>
+    <symbol id="palm" viewBox="0 0 140 220">
+      <path d="M62 220 C64 170 66 120 62 76 L72 76 C74 122 72 172 78 220Z"/>
+      <g>
+        <path transform="rotate(-105 67 74)" d="M67 74 C70 40 92 14 126 22 C100 26 84 44 67 74Z"/>
+        <path transform="rotate(-78 67 74)" d="M67 74 C70 40 92 14 126 22 C100 26 84 44 67 74Z"/>
+        <path transform="rotate(-52 67 74)" d="M67 74 C70 40 92 14 126 22 C100 26 84 44 67 74Z"/>
+        <path transform="rotate(-26 67 74)" d="M67 74 C70 40 92 14 126 22 C100 26 84 44 67 74Z"/>
+        <path transform="rotate(0 67 74)" d="M67 74 C70 40 92 14 126 22 C100 26 84 44 67 74Z"/>
+        <path transform="rotate(26 67 74)" d="M67 74 C70 40 92 14 126 22 C100 26 84 44 67 74Z"/>
+        <path transform="rotate(52 67 74)" d="M67 74 C70 40 92 14 126 22 C100 26 84 44 67 74Z"/>
+        <path transform="rotate(78 67 74)" d="M67 74 C70 40 92 14 126 22 C100 26 84 44 67 74Z"/>
+        <path transform="rotate(105 67 74)" d="M67 74 C70 40 92 14 126 22 C100 26 84 44 67 74Z"/>
+      </g>
+    </symbol>
+  </defs>
+
+  <rect width="1600" height="560" fill="url(#wave)"/>
+  <rect width="1600" height="150" fill="url(#lat)"/>
+  <rect y="410" width="1600" height="150" fill="url(#lat)"/>
+
+  <rect x="0" y="150" width="1600" height="260" fill="#ffffff"/>
+  <rect x="0" y="150" width="1600" height="12" fill="#2A1F12"/>
+  <rect x="0" y="398" width="1600" height="12" fill="#2A1F12"/>
+
+  <g fill="#2A1F12">
+    <use href="#palm" x="60" y="52" width="130" height="206" opacity="0"/>
+  </g>
+  <g fill="#BF9E66">
+    <use href="#palm" x="70" y="195" width="120" height="190"/>
+    <use href="#palm" x="1410" y="195" width="120" height="190"/>
+  </g>
+
+  <text x="800" y="318" text-anchor="middle" font-family="'Reem Kufi','Segoe UI','Noto Naskh Arabic',Tahoma,Arial,sans-serif" font-size="190" font-weight="700" fill="#2A1F12" direction="rtl">البصرة</text>
+  <text x="800" y="372" text-anchor="middle" font-family="'Segoe UI',Arial,sans-serif" font-size="30" letter-spacing="9" font-weight="600" fill="#A98748">BASRA · WHERE THE TWO RIVERS MEET</text>
+
+  <rect x="720" y="120" width="160" height="12" fill="#BF9E66"/>
+  <rect x="720" y="428" width="160" height="12" fill="#ffffff"/>
+</svg>
