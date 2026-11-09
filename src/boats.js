@@ -767,16 +767,29 @@ export function makeFlag(scale = 1, height = 12) {
   return g
 }
 
+/* سارية بعلم العراق (تلوّح بفعل الريح) على مؤخّرة السفينة، يتدلّى العلم خلفها */
+function addIraqFlag(g, x, y, z, s = 1) {
+  g.add(cyl(0.05 * s, 0.06 * s, 4 * s, 0xe8e8e8, x, y + 2 * s, z, 6))
+  const f = new THREE.Mesh(new THREE.PlaneGeometry(2.1 * s, 1.4 * s, 16, 4), flagMaterial())
+  f.position.set(x - 1.15 * s, y + 3.3 * s, z)
+  g.add(f)
+}
+
 /* سفينة شحن واقعية من نموذج GLB (Cargo ship by hungry_drifter، CC BY) */
-export function makeCargoShipGLB({ L = 64, file = 'assets/cargo-ship.glb', flip = false, beam = 0.17 } = {}) {
+export function makeCargoShipGLB({ L = 64, file = 'assets/cargo-ship.glb', flip = false, beam = 0.17, yaw = null, kind = 'ship', draftK = 0.2, flagAt = null, hide = [] } = {}) {
   const g = new THREE.Group()
   const B = L * beam
-  g.userData = { draft: L * 0.045, L, B, kind: 'ship', cranes: [] }
+  g.userData = { draft: L * 0.045, L, B, kind, cranes: [] }
   new GLTFLoader().load(file, (gltf) => {
     const m = gltf.scene
     let box = new THREE.Box3().setFromObject(m)
     let size = box.getSize(new THREE.Vector3())
-    if (size.z > size.x) {
+    if (yaw !== null) {
+      m.rotation.y = yaw
+      m.updateMatrixWorld(true)
+      box = new THREE.Box3().setFromObject(m)
+      size = box.getSize(new THREE.Vector3())
+    } else if (size.z > size.x) {
       m.rotation.y = Math.PI / 2
       m.updateMatrixWorld(true)
       box = new THREE.Box3().setFromObject(m)
@@ -796,15 +809,22 @@ export function makeCargoShipGLB({ L = 64, file = 'assets/cargo-ship.glb', flip 
     m.position.set(-c.x, -box.min.y, -c.z)
     holder.userData.size = size.clone().multiplyScalar(k)
     m.traverse((o) => {
+      if (hide.includes(o.name)) o.visible = false
       if (o.isMesh) {
         o.castShadow = true
         o.receiveShadow = true
         if (o.material) { o.material.envMapIntensity = 0.9; o.material.needsUpdate = true }
       }
     })
-    holder.position.y = g.userData.draft - size.y * k * 0.2
+    holder.position.y = g.userData.draft - size.y * k * draftK
     g.add(holder)
-    console.log('cargo glb size', size.x * k, size.y * k, size.z * k)
+    if (flagAt) addIraqFlag(g, flagAt.x * L, flagAt.y, flagAt.z || 0, flagAt.s || 1)
   })
   return g
 }
+
+/* قارب صيد واقعي من نموذج GLB يحلّ محل المشحوف */
+export const makeFishingBoat = () => makeCargoShipGLB({ flagAt: { x: -0.46, y: 1.9, s: 0.45 }, file: 'assets/boat-fishing.glb', L: 9, yaw: Math.PI / 2, beam: 0.42, kind: 'boat', draftK: 0.09 })
+
+/* سفينة شراعية سياحية واقعية من نموذج GLB تحلّ محل الداو */
+export const makeSchooner = () => makeCargoShipGLB({ hide: ['Object_4', 'Object_8'], flagAt: { x: -0.46, y: 2.4, s: 0.7 }, file: 'assets/small-cruise-ship.glb', L: 26, yaw: Math.PI, beam: 0.29, kind: 'ship', draftK: 0.05 })

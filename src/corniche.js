@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { createFleet } from './vehicles.js'
-import { makeMashoof, makeFlag } from './boats.js'
+import { makeFishingBoat, makeFlag } from './boats.js'
 
 /*
   كورنيش شطّ العرب على الضفة اليمنى: رصيف حجري بسياج وأعمدة إنارة مزدوجة الكرات،
@@ -757,7 +757,7 @@ export function createCorniche(scene, { riverX, halfW, terrainH, low = false, pl
     obstacles.push({ zE: PZ, off: halfW(PZ) - 13, hz: 4, hx: 15, moored: true, waiting: false })
     obstacles.push({ zE: PZ, off: halfW(PZ) - 26.5, hz: 9, hx: 4, moored: true, waiting: false })
     /* مشحوف راسٍ بجانب الرصيف */
-    const mo = makeMashoof()
+    const mo = makeFishingBoat()
     const sc = 1.15
     mo.scale.setScalar(sc)
     mo.position.y = -0.95 - (mo.userData.draft || 0) * sc

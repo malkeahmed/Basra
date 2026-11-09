@@ -461,7 +461,7 @@ function Intro() {
       <div className="wrap td">
         <div className="td-head">
           <p className="rv"><b>٠٣</b><i />مشاهد من البصرة</p>
-          <h3 className="rv" style={{ '--d': '80ms' }}>ثلاثة مشاهد<br />لا تُنسى</h3>
+          <h3 className="rv" style={{ '--d': '80ms' }}>ثلاثة مشاهد لا تُنسى</h3>
         </div>
         <div className="td-grid">
           <div className="td-list">
@@ -793,19 +793,6 @@ function Footer() {
   )
 }
 
-function Mist() {
-  return (
-    <div className="mist" aria-hidden="true">
-      {['l', 'r'].map((sd) => (
-        <div key={sd} className={'mist-ruler ' + sd}>
-          {['٧٠٠', '٦٠٠', '٥٠٠', '٤٠٠', '٣٠٠', '٢٠٠'].map((n) => (<span key={n}>{n}</span>))}
-          <i className="mist-dot" />
-        </div>
-      ))}
-    </div>
-  )
-}
-
 function Gate() {
   const [pr, setPr] = useState(0)
   const [out, setOut] = useState(false)
@@ -838,7 +825,7 @@ function Gate() {
       setOut(true)
       setMist(true)
       document.body.classList.add('descent')
-      setTimeout(() => document.body.classList.remove('descent'), 7000)
+      setTimeout(() => document.body.classList.remove('descent'), 2200)
       window.dispatchEvent(new Event('basra-enter'))
       document.documentElement.style.overflow = ''
       window.scrollTo(0, 0)
@@ -892,7 +879,6 @@ function Gate() {
         </div>
       </div>
       )}
-      {mist && <Mist />}
     </>
   )
 }

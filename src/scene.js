@@ -7,7 +7,7 @@ import { createStadium, stadBlend, inStad } from './stadium.js'
 import { createOilField, oilBlend, inOil } from './oilfield.js'
 import { createCorniche, cornBlend, cornMask, inCorn } from './corniche.js'
 import { createStatuePlaza, plazaBlend, plazaMask, inPlaza } from './statue.js'
-import { makeMashoof, makeDhow, makeTanker, makeContainerShip, makeCargoShip, makeCargoShipGLB, makeBargeTug, makeWake, animateVessel, shipUniforms } from './boats.js'
+import { makeSchooner, makeFishingBoat, makeMashoof, makeDhow, makeTanker, makeContainerShip, makeCargoShip, makeCargoShipGLB, makeBargeTug, makeWake, animateVessel, shipUniforms } from './boats.js'
 
 /* مجسّم البصرة: نهر يتلوّى بين رمال ذهبية ونخيل وزوارق، تطير الكاميرا فوقه مع التمرير */
 
@@ -61,10 +61,10 @@ const inSignZone = (x, z) => z < SIGN.z + 12 && z > SIGN.z - 12 && x - leftBank(
 const WAYPOINTS = [
   [0.0, [112, 70, 300], [112, 16, 105], 64, 0],
   [0.03, [112, 62, 270], [112, 17, 105], 58, 0],
-  [0.06, [100, 16, 175], [112, 17, 105], 60, -1],
-  [0.085, [106, 8.5, 128], [112, 19, 96], 68, -2],
-  [0.105, [108, 8, 100], [112, 20, 84], 72, 0],
-  [0.125, [100, 9, 78], [100, 6, 20], 62, 1],
+  [0.06, [100, 14, 175], [112, 12, 100], 60, 0],
+  [0.085, [106, 6, 128], [111, 6.5, 50], 62, 0],
+  [0.105, [108, 5.5, 100], [112, 6.5, 10], 62, 0],
+  [0.125, [100, 8, 78], [100, 6, 20], 62, 0],
   [0.15, [150, 11, 34], [208, 6, -6], 58, 0],
   [0.18, [168, 9, -14], [212, 5, -50], 56, 1],
   [0.21, [156, 9, -60], [212, 6, -96], 56, 1],
@@ -105,12 +105,14 @@ function makeTrack(get) {
   const m = Y.map((_, i) => {
     if (i === 0) return dl[0]
     if (i === n - 1) return dl[n - 2]
-    if (dl[i - 1] * dl[i] <= 0) return 0
+    const cr = (Y[i + 1] - Y[i - 1]) / (T[i + 1] - T[i - 1])
+    if (dl[i - 1] * dl[i] <= 0) return cr * 0.4
     const h0 = T[i] - T[i - 1]
     const h1 = T[i + 1] - T[i]
     const w1 = 2 * h1 + h0
     const w2 = h1 + 2 * h0
-    return (w1 + w2) / (w1 / dl[i - 1] + w2 / dl[i])
+    const mono = (w1 + w2) / (w1 / dl[i - 1] + w2 / dl[i])
+    return mono * 0.35 + cr * 0.65
   })
   return (t) => {
     t = Math.min(1, Math.max(0, t))
@@ -549,7 +551,7 @@ export function createScene(canvas, { low = false } = {}) {
     const gap = halfW(z) + 2 + r2() * (4 + 26 * (1 - grove))
     if (r2() > 0.35 + grove * 0.65) continue
     const x = riverX(z) + side * gap
-    if (inPort(x, z, riverX(z), halfW(z), 0.001) || inPlaza(x, z, riverX(z), halfW(z), 0.001) || inCorn(x, z, riverX(z), halfW(z), 0.001) || inOil(x, z, riverX(z), halfW(z), 0.001) || inStad(x, z, riverX(z), halfW(z), 0.001) || inSignZone(x, z) || (side < 0 && z < -360 && z > -510 && gap < halfW(z) + 60)) continue
+    if (inPort(x, z, riverX(z), halfW(z), 0.001) || inPlaza(x, z, riverX(z), halfW(z), 0.001) || inCorn(x, z, riverX(z), halfW(z), 0.001) || inOil(x, z, riverX(z), halfW(z), 0.001) || inStad(x, z, riverX(z), halfW(z), 0.001) || inSignZone(x, z) || (side > 0 && z < -205 && z > -252 && gap < halfW(z) + 20) || (side < 0 && z < -360 && z > -510 && gap < halfW(z) + 60)) continue
     const y = terrainH(x, z) - 0.25
     const sc = 0.8 + r2() * 0.55
     dummy.position.set(x, y, z)
@@ -673,13 +675,13 @@ export function createScene(canvas, { low = false } = {}) {
   }
   ;[
     [-116, -84], [-134, -62], [-150, -30], [-178, -92], [-224, -70], [-262, -46], [-420, -80],
-  ].forEach(([z, off]) => place(makeMashoof(), { z, off, scale: 1.25, drift: 3, flip: Math.random() < 0.5, slow: 0.28 }))
+  ].forEach(([z, off]) => place(makeFishingBoat(), { z, off, scale: 1.25, drift: 3, flip: Math.random() < 0.5, slow: 0.28 }))
   ;[
     [-322, -62], [-352, -18], [-372, -88],
-  ].forEach(([z, off], i) => place(makeDhow(), { z, off, scale: 1 - i * 0.1, flip: i === 1, speed: i === 1 ? 1.7 : -1.5 - i * 0.2, yaw: [0.34, -0.3, 0.28][i], bob: 0.14 }))
+  ].forEach(([z, off], i) => place(makeSchooner(), { z, off, scale: 1 - i * 0.1, flip: i === 1, speed: i === 1 ? 1.7 : -1.5 - i * 0.2, yaw: [0.34, -0.3, 0.28][i], bob: 0.14 }))
   /* سفن متحرّكة في المسار الأيمن (كلها بالسرعة نفسها كي لا تتصادم) */
-  place(makeCargoShipGLB(), { z: -110, off: 24, speed: -2.6, bob: 0.05 })
-  place(makeCargoShipGLB({ L: 66, file: 'assets/cargo-ship-02.glb', flip: true, beam: 0.3 }), { z: -300, off: 24, speed: -2.6, bob: 0.05 })
+  place(makeCargoShipGLB({ flagAt: { x: -0.45, y: 5.2, s: 1.3 } }), { z: -110, off: 24, speed: -2.6, bob: 0.05 })
+  place(makeCargoShipGLB({ flagAt: { x: -0.45, y: 8, s: 1.4 }, L: 66, file: 'assets/cargo-ship-02.glb', flip: true, beam: 0.3 }), { z: -300, off: 24, speed: -2.6, bob: 0.05 })
   /* بارجة بقاطرة في المسار الأيسر تصعد النهر قبل منطقة الميناء */
   place(makeBargeTug(), { z: -300, off: -48, flip: true, speed: 1.9, bob: 0.06, spawnZ: -362 })
 
@@ -815,6 +817,10 @@ export function createScene(canvas, { low = false } = {}) {
   let target = 0
   let current = 0
   let mid2 = 0
+  let mid1 = 0
+  const camS = new THREE.Vector3()
+  const lookS = new THREE.Vector3()
+  let smInit = false
   let nightT = 0
   let night = 0
   let tiltT = 0
@@ -918,8 +924,9 @@ export function createScene(canvas, { low = false } = {}) {
     }
     /* تنعيم مستقل عن معدّل الإطارات بمرحلتين فيخرج الإيقاف والانطلاق ناعمَين */
     const sdt = Math.min(0.1, Math.max(0.001, dtm / 1000))
-    mid2 += (target - mid2) * (reduce ? 1 : 1 - Math.exp(-sdt * 5))
-    current += (mid2 - current) * (reduce ? 1 : 1 - Math.exp(-sdt * 3.2))
+    mid1 += (target - mid1) * (reduce ? 1 : 1 - Math.exp(-sdt * 3.6))
+    mid2 += (mid1 - mid2) * (reduce ? 1 : 1 - Math.exp(-sdt * 2.8))
+    current += (mid2 - current) * (reduce ? 1 : 1 - Math.exp(-sdt * 2.2))
     mx2 += (tmx - mx2) * 0.05
     my2 += (tmy - my2) * 0.05
 
@@ -971,7 +978,17 @@ export function createScene(canvas, { low = false } = {}) {
         puffGroup.visible = false
       }
     }
-    camera.lookAt(look)
+    /* تنعيم نهائي لموضع الكاميرا ونقطة النظر: حركة انسيابية بلا أيّ ارتعاش */
+    if (!smInit || reduce) {
+      camS.copy(camera.position)
+      lookS.copy(look)
+      smInit = true
+    } else {
+      camS.lerp(camera.position, 1 - Math.exp(-sdt * 7))
+      lookS.lerp(look, 1 - Math.exp(-sdt * 5))
+    }
+    camera.position.copy(camS)
+    camera.lookAt(lookS)
     sky.position.copy(camera.position)
     camera.rotateZ((rollT(current) * Math.PI) / 180 - mx2 * 0.012)
     const fv = fovT(current) * fovMul

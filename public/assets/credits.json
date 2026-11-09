@@ -336,5 +336,21 @@
   "creator": "author to be confirmed (Sketchfab)",
   "license": "to be confirmed",
   "creditRequired": true
+ },
+ {
+  "file": "assets/boat-fishing.glb",
+  "media": "3d-model",
+  "title": "Fishing boat",
+  "creator": "author to be confirmed (Sketchfab)",
+  "license": "to be confirmed",
+  "creditRequired": true
+ },
+ {
+  "file": "assets/small-cruise-ship.glb",
+  "media": "3d-model",
+  "title": "Small cruise ship",
+  "creator": "author to be confirmed (Sketchfab)",
+  "license": "to be confirmed",
+  "creditRequired": true
  }
 ]
