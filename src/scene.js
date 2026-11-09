@@ -7,7 +7,7 @@ import { createStadium, stadBlend, inStad } from './stadium.js'
 import { createOilField, oilBlend, inOil } from './oilfield.js'
 import { createCorniche, cornBlend, cornMask, inCorn } from './corniche.js'
 import { createStatuePlaza, plazaBlend, plazaMask, inPlaza } from './statue.js'
-import { makeMashoof, makeDhow, makeTanker, makeContainerShip, makeCargoShip, makeBargeTug, makeWake, animateVessel, shipUniforms } from './boats.js'
+import { makeMashoof, makeDhow, makeTanker, makeContainerShip, makeCargoShip, makeCargoShipGLB, makeBargeTug, makeWake, animateVessel, shipUniforms } from './boats.js'
 
 /* مجسّم البصرة: نهر يتلوّى بين رمال ذهبية ونخيل وزوارق، تطير الكاميرا فوقه مع التمرير */
 
@@ -30,7 +30,8 @@ function terrainH(x, z) {
   const w = halfW(z)
   const dune = Math.sin(x * 0.045 + z * 0.02) * 2.2 + Math.cos(z * 0.03 - x * 0.02) * 1.8 + Math.sin(x * 0.11) * Math.cos(z * 0.09) * 0.7
   const bank = THREE.MathUtils.smoothstep(d, w - 1, w + 11)
-  let h = THREE.MathUtils.lerp(-2.4, 0.7 + dune * 0.55, bank)
+  const land = 0.7 + dune * 0.55
+  let h = THREE.MathUtils.lerp(-2.4, Math.max(land, 0.12 + land * 0.15), bank)
   if (d > w + 36) h += (d - w - 36) * 0.07
   return stadBlend(oilBlend(cornBlend(plazaBlend(portBlend(h, x, z, riverX(z), halfW(z)), x, z, riverX(z), halfW(z)), x, z, riverX(z), halfW(z)), x, z, riverX(z), halfW(z)), x, z, riverX(z), halfW(z))
 }
@@ -282,6 +283,45 @@ export function createScene(canvas, { low = false } = {}) {
   terrain.receiveShadow = true
   scene.add(terrain)
 
+  /* الأراضي البعيدة: سهل أخضر ممتدّ على الجانبين بعد حافّة التضاريس القديمة، يتّصل بها من غير درز، فلا يظهر أيّ بحر أو فراغ بين الضفّتين والأفق */
+  const FAR_EDGE = tw / 2
+  const farH = (x, z) => {
+    const xe = x > 0 ? FAR_EDGE : -FAR_EDGE
+    const base = terrainH(xe, z)
+    const k = THREE.MathUtils.smoothstep(Math.abs(x) - FAR_EDGE, 0, 50)
+    const dune = Math.sin(x * 0.03 + z * 0.017) * 1.5 + Math.cos(z * 0.025 - x * 0.02) * 1.1 + Math.sin(x * 0.09) * Math.cos(z * 0.07) * 0.5
+    const h = Math.max(base + dune * 0.6 * k, 0.05)
+    const rx = riverX(z)
+    const hw = halfW(z)
+    return stadBlend(oilBlend(cornBlend(plazaBlend(portBlend(h, x, z, rx, hw), x, z, rx, hw), x, z, rx, hw), x, z, rx, hw), x, z, rx, hw)
+  }
+  const farMat = new THREE.MeshStandardMaterial({ vertexColors: true, map: grassTexture(), roughness: 1 })
+  const FW = 1200
+  ;[-1, 1].forEach((sgn) => {
+    const fg = new THREE.PlaneGeometry(FW, tl, low ? 28 : 56, low ? 160 : 240)
+    fg.rotateX(-Math.PI / 2)
+    fg.translate(sgn * (FAR_EDGE + FW / 2), 0, -200)
+    const fp = fg.attributes.position
+    const fc = new Float32Array(fp.count * 3)
+    for (let i = 0; i < fp.count; i++) {
+      const x = fp.getX(i)
+      const z = fp.getZ(i)
+      fp.setY(i, farH(x, z))
+      const patch = 0.5 + 0.5 * Math.sin(x * 0.03 + Math.sin(z * 0.03) * 2.0) * Math.cos(z * 0.037 - x * 0.012)
+      tmp.copy(lush).lerp(meadow, patch)
+      tmp.lerp(olive, 0.12 + Math.min(0.2, (Math.abs(x) - FAR_EDGE) * 0.0002))
+      tmp.offsetHSL((r1() - 0.5) * 0.015, (r1() - 0.5) * 0.06, (r1() - 0.5) * 0.04)
+      fc[i * 3] = tmp.r
+      fc[i * 3 + 1] = tmp.g
+      fc[i * 3 + 2] = tmp.b
+    }
+    fg.setAttribute('color', new THREE.BufferAttribute(fc, 3))
+    fg.computeVertexNormals()
+    const fm = new THREE.Mesh(fg, farMat)
+    fm.receiveShadow = true
+    scene.add(fm)
+  })
+
   /* النهر */
   const rows = 330
   const cl = 14
@@ -319,6 +359,11 @@ export function createScene(canvas, { low = false } = {}) {
   wg.setIndex(widx)
 
   /* ماء حقيقي: انعكاس فرينل، تموّجات، لمعان الشمس، وعمق يتدرّج نحو الضفاف */
+  const seaTex = new THREE.TextureLoader().load('assets/sea-wave.jpg')
+  seaTex.wrapS = seaTex.wrapT = THREE.MirroredRepeatWrapping
+  seaTex.anisotropy = 8
+  seaTex.generateMipmaps = true
+  seaTex.minFilter = THREE.LinearMipmapLinearFilter
   const waterMat = new THREE.ShaderMaterial({
     transparent: true,
     side: THREE.DoubleSide,
@@ -328,6 +373,7 @@ export function createScene(canvas, { low = false } = {}) {
       uDim: { value: 1 },
       uFogNear: { value: scene.fog.near },
       uFogFar: { value: scene.fog.far },
+      uTex: { value: seaTex },
     },
     vertexShader: `
       varying vec3 vWorld;
@@ -350,6 +396,7 @@ export function createScene(canvas, { low = false } = {}) {
       uniform float uDim;
       uniform float uFogNear;
       uniform float uFogFar;
+      uniform sampler2D uTex;
       float hgt(vec2 p) {
         float t = uTime;
         float h = sin(p.x * 0.9 + t * 1.3) * 0.5;
@@ -382,6 +429,13 @@ export function createScene(canvas, { low = false } = {}) {
         vec3 body = mix(mix(deep, mid, 1.0 - smoothstep(14.0, 80.0, dEdge)), shore, shallow);
         float murk = 0.5 + 0.5 * sin(p.x * 0.07 + p.y * 0.05);
         body = mix(body, vec3(0.34, 0.38, 0.28), murk * 0.4);
+        /* صورة ماء بحر حقيقية: طبقتان تتحرّكان ببطء وتتلاشيان بعيداً إلى متوسّط لونها */
+        vec2 tuv = p * 0.05;
+        vec3 tA = texture2D(uTex, tuv + vec2(uTime * 0.006, uTime * 0.003)).rgb;
+        vec3 tB = texture2D(uTex, tuv * 2.7 + vec2(-uTime * 0.009, uTime * 0.005) + 0.37).rgb;
+        vec3 tex = mix(tA, tB, 0.45) * 1.35;
+        tex = mix(tex, vec3(0.13, 0.29, 0.33) * 1.2, smoothstep(50.0, 320.0, dist0));
+        body = mix(body, tex, 0.88 * (1.0 - shallow * 0.55));
 
         vec3 R = reflect(-V, n);
         float sky = clamp(R.y * 1.6, 0.0, 1.0);
@@ -408,7 +462,7 @@ export function createScene(canvas, { low = false } = {}) {
   /* بحر بعيد طبيعي: يملأ الأفق خلف النهر بدل الخلفية الزرقاء المسطّحة — تموّج هادئ، انعكاس السماء ولمعان الشمس */
   const seaMat = new THREE.ShaderMaterial({
     fog: false,
-    uniforms: { uTime: { value: 0 }, uHaze: { value: new THREE.Vector3(0.66, 0.82, 0.96) }, uDim: { value: 1 } },
+    uniforms: { uTime: { value: 0 }, uHaze: { value: new THREE.Vector3(0.66, 0.82, 0.96) }, uDim: { value: 1 }, uTex: { value: seaTex } },
     vertexShader: `
       varying vec3 vWorld;
       void main() {
@@ -422,6 +476,7 @@ export function createScene(canvas, { low = false } = {}) {
       uniform float uTime;
       uniform vec3 uHaze;
       uniform float uDim;
+      uniform sampler2D uTex;
       float hgt(vec2 p) {
         float t = uTime * 0.55;
         float h = sin(p.x * 0.045 + t * 0.8) * 0.5;
@@ -443,8 +498,14 @@ export function createScene(canvas, { low = false } = {}) {
         float fres = 0.02 + 0.98 * pow(1.0 - ndv, 3.6);
         vec3 deep = vec3(0.04, 0.27, 0.34);
         vec3 shallow = vec3(0.16, 0.45, 0.48);
-        float patch = 0.5 + 0.5 * sin(p.x * 0.011 + p.y * 0.008) * sin(p.y * 0.006 - p.x * 0.004);
-        vec3 body = mix(deep, shallow, patch);
+        float pch = 0.5 + 0.5 * sin(p.x * 0.011 + p.y * 0.008) * sin(p.y * 0.006 - p.x * 0.004);
+        vec3 body = mix(deep, shallow, pch);
+        vec2 suv = p * 0.02;
+        vec3 sA = texture2D(uTex, suv + vec2(uTime * 0.004, uTime * 0.002)).rgb;
+        vec3 sB = texture2D(uTex, suv * 2.9 + vec2(-uTime * 0.006, uTime * 0.003) + 0.21).rgb;
+        vec3 stex = mix(sA, sB, 0.45) * 1.3;
+        stex = mix(stex, vec3(0.13, 0.29, 0.33) * 1.2, smoothstep(120.0, 900.0, d));
+        body = mix(body, stex, 0.8);
         float sss = pow(1.0 - ndv, 2.0) * 0.18;
         body += vec3(0.02, 0.10, 0.09) * sss;
         vec3 R = reflect(-V, n);
@@ -456,14 +517,20 @@ export function createScene(canvas, { low = false } = {}) {
         col += vec3(1.0, 0.93, 0.74) * (pow(sp, 160.0) * 2.4 + pow(sp, 14.0) * 0.26);
         float crest = smoothstep(0.62, 0.95, hgt(p * 1.0 + vec2(uTime * 0.4, 0.0)) * 0.55 + 0.5);
         col = mix(col, vec3(0.92, 0.96, 0.97), crest * 0.1 * (1.0 - smoothstep(60.0, 700.0, d)));
-        col = mix(col, uHaze, smoothstep(1700.0, 7000.0, d) * 0.9);
+        /* ذوبان الأفق: لون الجوّ عند الأفق بما فيه وهج الشمس نفسه، فيذوب البحر فيه بلا أيّ حدّ ظاهر */
+        vec3 vdir = normalize(vWorld - cameraPosition);
+        float sdh = max(dot(vdir, normalize(vec3(-0.05, 0.28, -1.0))), 0.0);
+        vec3 hz = uHaze + vec3(1.0, 0.82, 0.55) * pow(sdh, 18.0) * 0.45 + vec3(1.0, 0.9, 0.7) * pow(sdh, 160.0) * 0.8;
+        col = mix(col, hz, smoothstep(1700.0, 7000.0, d) * 0.9);
+        float ang = -vdir.y;
+        col = mix(hz, col, smoothstep(0.0, 0.14, ang));
         gl_FragColor = vec4(col * uDim, 1.0);
       }
     `,
   })
   const sea = new THREE.Mesh(new THREE.PlaneGeometry(16000, 16000, 1, 1), seaMat)
   sea.rotation.x = -Math.PI / 2
-  sea.position.set(0, -0.7, -200)
+  sea.position.set(0, -1.35, -200)
   sea.renderOrder = -1
   scene.add(sea)
 
@@ -491,6 +558,25 @@ export function createScene(canvas, { low = false } = {}) {
     dummy.updateMatrix()
     mats[Math.floor(r2() * variants.length)].push(dummy.matrix.clone())
     placed++
+  }
+  /* غابة نخيل كثيفة على الأراضي البعيدة، يميناً ويساراً، تملأ السهل حتى الأفق */
+  {
+    const farN = low ? 420 : 1500
+    const rf = rng(77)
+    for (let n = 0; n < farN; n++) {
+      const sgn = rf() < 0.5 ? -1 : 1
+      const x = sgn * (FAR_EDGE + 6 + Math.pow(rf(), 0.8) * 760)
+      const z = 230 - rf() * 880
+      const cluster = Math.sin(x * 0.02 + z * 0.015) * 0.5 + 0.5
+      if (rf() > 0.4 + cluster * 0.6) continue
+      if (inPort(x, z, riverX(z), halfW(z), 0.001) || inPlaza(x, z, riverX(z), halfW(z), 0.001) || inCorn(x, z, riverX(z), halfW(z), 0.001) || inOil(x, z, riverX(z), halfW(z), 0.001) || inStad(x, z, riverX(z), halfW(z), 0.001)) continue
+      const sc = 0.85 + rf() * 0.7
+      dummy.position.set(x, farH(x, z) - 0.25, z)
+      dummy.rotation.set((rf() - 0.5) * 0.06, rf() * Math.PI * 2, (rf() - 0.5) * 0.06)
+      dummy.scale.setScalar(sc)
+      dummy.updateMatrix()
+      mats[Math.floor(rf() * variants.length)].push(dummy.matrix.clone())
+    }
   }
   const trunkMat = swayMaterial(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1 }), uTime, 0.6)
   const frondMat = swayMaterial(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.7, side: THREE.DoubleSide }), uTime, 0.6, true)
@@ -592,8 +678,8 @@ export function createScene(canvas, { low = false } = {}) {
     [-322, -62], [-352, -18], [-372, -88],
   ].forEach(([z, off], i) => place(makeDhow(), { z, off, scale: 1 - i * 0.1, flip: i === 1, speed: i === 1 ? 1.7 : -1.5 - i * 0.2, yaw: [0.34, -0.3, 0.28][i], bob: 0.14 }))
   /* سفن متحرّكة في المسار الأيمن (كلها بالسرعة نفسها كي لا تتصادم) */
-  place(makeCargoShip(), { z: -110, off: 24, speed: -2.6, bob: 0.05 })
-  place(makeTanker(), { z: -300, off: 24, scale: 0.9, speed: -2.6, bob: 0.05 })
+  place(makeCargoShipGLB(), { z: -110, off: 24, speed: -2.6, bob: 0.05 })
+  place(makeCargoShipGLB({ L: 66, file: 'assets/cargo-ship-02.glb', flip: true, beam: 0.3 }), { z: -300, off: 24, speed: -2.6, bob: 0.05 })
   /* بارجة بقاطرة في المسار الأيسر تصعد النهر قبل منطقة الميناء */
   place(makeBargeTug(), { z: -300, off: -48, flip: true, speed: 1.9, bob: 0.06, spawnZ: -362 })
 
@@ -769,6 +855,51 @@ export function createScene(canvas, { low = false } = {}) {
 
   const look = new THREE.Vector3()
   let frame = 0
+  /* هبوط الدخول: الكاميرا تنزل من علوّ شاهق عبر سحب ثلاثية الأبعاد (بقع دخانية) إلى النهر، كما في الموقع المرجعي */
+  const puffTex = (() => {
+    const cv = document.createElement('canvas')
+    cv.width = cv.height = 256
+    const g = cv.getContext('2d')
+    const rp = rng(99)
+    for (let i = 0; i < 46; i++) {
+      const a = rp() * Math.PI * 2
+      const r = Math.pow(rp(), 0.7) * 78
+      const x = 128 + Math.cos(a) * r
+      const y = 128 + Math.sin(a) * r * 0.78
+      const rad = 34 + rp() * 52
+      const gr = g.createRadialGradient(x, y, 0, x, y, rad)
+      gr.addColorStop(0, 'rgba(255,244,236,0.30)')
+      gr.addColorStop(0.55, 'rgba(250,226,210,0.14)')
+      gr.addColorStop(1, 'rgba(245,215,198,0)')
+      g.fillStyle = gr
+      g.fillRect(0, 0, 256, 256)
+    }
+    const t = new THREE.CanvasTexture(cv)
+    t.colorSpace = THREE.SRGBColorSpace
+    return t
+  })()
+  const puffs = []
+  const puffGroup = new THREE.Group()
+  {
+    const rc = rng(404)
+    const n = low ? 22 : 44
+    for (let i = 0; i < n; i++) {
+      const m = new THREE.SpriteMaterial({ map: puffTex, transparent: true, depthWrite: false, fog: false, opacity: 0 })
+      const sp = new THREE.Sprite(m)
+      const sc = 110 + rc() * 190
+      sp.scale.set(sc * 1.4, sc, 1)
+      puffs.push({ sp, base: 0.22 + rc() * 0.3, ox: (rc() - 0.5) * 360, oy: -20 + rc() * 420, oz: -40 + rc() * 330 })
+      puffGroup.add(sp)
+    }
+    scene.add(puffGroup)
+  }
+  const descent = { run: false, t0: 0, done: false }
+  let descentK = 0
+  const smoothstepF = (a, b, x) => {
+    const t = Math.min(1, Math.max(0, (x - a) / (b - a)))
+    return t * t * (3 - 2 * t)
+  }
+
   function tick() {
     raf = requestAnimationFrame(tick)
     if (!visible) return
@@ -811,6 +942,34 @@ export function createScene(canvas, { low = false } = {}) {
       waterMat.uniforms.uDim.value = 1 - 0.88 * nn
       seaMat.uniforms.uHaze.value.set(scene.fog.color.r, scene.fog.color.g, scene.fog.color.b)
       seaMat.uniforms.uDim.value = 1 - 0.88 * nn
+    }
+    /* هبوط الدخول: ارتفاع شاهق ينخفض بسلاسة نحو الموضع المعتاد، والغيوم تحيط بالكاميرا ثم تذوب */
+    if (!descent.done) {
+      descentK = descent.run ? Math.min(1, (now - descent.t0) / 6800) : 0
+      if (reduce) descentK = 1
+      const awayK = 1 - smoothstepF(0.0, 0.04, current)
+      const e = 1 - (1 - Math.pow(1 - descentK, 3)) * 1
+      camera.position.y += 420 * e * awayK
+      camera.position.z += 280 * e * awayK
+      look.y += 110 * e * awayK
+      const fade = (1 - smoothstepF(0.72, 1, descentK)) * awayK
+      puffGroup.visible = fade > 0.01
+      if (puffGroup.visible) {
+        const bx = camera.position.x
+        puffs.forEach((q, i) => {
+          const gx = leftBank(300) + 112 + q.ox
+          const gy = 70 + q.oy
+          const gz = 300 - q.oz * 0.0 + q.oz - 150
+          q.sp.position.set(gx, gy, gz)
+          const d = q.sp.position.distanceTo(camera.position)
+          q.sp.material.opacity = q.base * smoothstepF(30, 120, d) * (1 - smoothstepF(620, 900, d)) * fade
+        })
+        void bx
+      }
+      if (descentK >= 1 && descent.run) {
+        descent.done = true
+        puffGroup.visible = false
+      }
     }
     camera.lookAt(look)
     sky.position.copy(camera.position)
@@ -909,6 +1068,15 @@ export function createScene(canvas, { low = false } = {}) {
   return {
     setProgress(p) {
       target = p
+    },
+    startDescent() {
+      descent.run = true
+      descent.done = false
+      descent.t0 = performance.now()
+    },
+    resetDescent() {
+      descent.run = false
+      descent.done = false
     },
     setNight(n) {
       nightT = n

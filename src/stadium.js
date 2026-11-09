@@ -800,13 +800,22 @@ export function createStadium(scene, { riverX, halfW, terrainH, low = false, pla
     let si = 0
     fleet.forEach((f) => {
       root.add(f.im)
+      let placed = 0
       for (let i = 0; i < f.n && si < slots.length; i++, si++) {
+        placed++
         const [lz, ld, row] = slots[si]
         if (r() < 0.22) {
           dummy.scale.setScalar(0)
         } else dummy.scale.setScalar(1)
         dummy.position.copy(P(lz, ld, GY + 0.05))
         dummy.rotation.set(0, toRiver(lz) + (row ? Math.PI : 0), 0)
+        dummy.updateMatrix()
+        f.im.setMatrixAt(i, dummy.matrix)
+      }
+      /* السيارات الفائضة عن المواقف: تُخفى بدل أن تبقى عند مركز المشهد فوق الماء */
+      for (let i = placed; i < f.n; i++) {
+        dummy.position.set(0, -500, 0)
+        dummy.scale.setScalar(0)
         dummy.updateMatrix()
         f.im.setMatrixAt(i, dummy.matrix)
       }

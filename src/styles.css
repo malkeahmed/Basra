@@ -1554,3 +1554,140 @@ main { position: relative; z-index: 2; background: #fff; border-radius: 0 0 clam
 .mn.open .mn-imgs img.on { animation: mn-zoom 14s ease-out forwards; }
 @keyframes mn-zoom { from { transform: scale(1.12); } to { transform: scale(1); } }
 .mn-foot::before { content: ''; display: inline-block; width: 38px; height: 1px; background: rgba(255, 255, 255, .5); vertical-align: middle; margin-inline-end: 14px; }
+
+/* بوّابة الدخول: شاشة بحريّة داكنة وقرص دائري بحلقتين وعلامات تتوهّج مع التحميل، فأرة بأسهم تنساب ونص «SCROLL TO EXPLORE»؛ عند أوّل تمرير يتّسع القرص ويتلاشى */
+.gate { position: fixed; inset: 0; z-index: 300; display: grid; place-items: center; background: radial-gradient(ellipse 60% 55% at 50% 50%, #0b2133, #051019 72%); transition: opacity 1s .35s ease, visibility 0s 1.4s; overflow: hidden; }
+.gate.out { opacity: 0; visibility: hidden; pointer-events: none; }
+.gate-glow { position: absolute; width: min(70vmin, 640px); aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle, rgba(255, 110, 84, .38), rgba(255, 110, 84, .08) 50%, transparent 70%); animation: g-breathe 4s ease-in-out infinite; transition: transform 1.3s cubic-bezier(.6, 0, .2, 1), opacity 1s; }
+@keyframes g-breathe { 0%, 100% { transform: scale(.92); opacity: .75; } 50% { transform: scale(1.06); opacity: 1; } }
+.gate-dial { position: absolute; width: min(62vmin, 520px); aspect-ratio: 1; transition: transform 1.3s cubic-bezier(.6, 0, .2, 1), opacity 1s; }
+.gate-dial svg { width: 100%; height: 100%; overflow: visible; }
+.g-r1 { stroke: rgba(255, 255, 255, .8); stroke-width: 1.2; }
+.g-r2 { stroke: rgba(255, 255, 255, .35); stroke-width: 1; }
+.g-ticks { transform-origin: 170px 170px; animation: g-spin 80s linear infinite; }
+@keyframes g-spin { to { transform: rotate(360deg); } }
+.g-ticks line { stroke: rgba(255, 255, 255, .22); stroke-width: 1; transition: stroke .3s; }
+.g-ticks line.on { stroke: rgba(255, 255, 255, .8); }
+.gate.ready .g-ticks line.on { stroke: #ff7a5c; }
+.gate-core { position: relative; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 14px; transition: opacity .5s, transform 1s cubic-bezier(.6, 0, .2, 1); }
+.gate-mouse { position: relative; width: 26px; height: 42px; border-radius: 14px; box-shadow: inset 0 0 0 1.5px rgba(255, 138, 106, .9); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; overflow: hidden; }
+.gate-mouse i { display: block; width: 8px; height: 8px; border-right: 1.6px solid #ff8a6a; border-bottom: 1.6px solid #ff8a6a; transform: rotate(45deg); margin-top: -2px; opacity: .25; animation: g-ch 1.5s ease-in-out infinite; }
+.gate-mouse i:nth-child(2) { animation-delay: .2s; }
+.gate-mouse i:nth-child(3) { animation-delay: .4s; }
+@keyframes g-ch { 0%, 100% { opacity: .2; } 45% { opacity: 1; } }
+.gate-t { margin: 0; font-family: 'Unbounded', 'IBM Plex Sans Arabic', sans-serif; font-weight: 400; font-size: clamp(.68rem, .9vw, .85rem); letter-spacing: .22em; color: #fff; direction: ltr; }
+.gate-a { margin: 0; font-weight: 500; font-size: clamp(.85rem, 1.1vw, 1rem); color: rgba(255, 255, 255, .62); }
+.gate.out .gate-dial { transform: scale(3.2); opacity: 0; }
+.gate.out .gate-glow { transform: scale(3); opacity: 0; }
+.gate.out .gate-core { opacity: 0; transform: translateY(24px); }
+@media (prefers-reduced-motion: reduce) { .g-ticks, .gate-glow, .gate-mouse i { animation: none; } }
+.gate { transition: opacity .8s ease, visibility 0s; }
+.gate.out { transition: opacity 1s .35s ease, visibility 0s 1.4s; }
+
+/* ضباب العبور: خلفية غروب خوخية-بنفسجية، ثلاث طبقات غيوم تتّسع وتنجرف وتتبدّد، عنوان عملاق مفرّغ يتلاشى، ومسطرتان جانبيتان بعلامة تنزل */
+.mist { position: fixed; inset: 0; z-index: 250; pointer-events: none; overflow: hidden; animation: mist-all 5.2s linear forwards; }
+@keyframes mist-all { 0%, 62% { opacity: 1; } 100% { opacity: 0; } }
+.mist-bg { position: absolute; inset: 0; background: linear-gradient(180deg, #8f9bb8 0%, #d9b8b0 28%, #eec2a4 48%, #e69b7a 72%, #c98a78 100%); animation: mist-bg 5.2s ease-in-out forwards; }
+@keyframes mist-bg { 0% { opacity: 1; } 55% { opacity: .85; } 100% { opacity: 0; } }
+.mist-c { position: absolute; inset: -15%; background-size: 80% 100%; background-repeat: no-repeat; background-position: 50% 50%; will-change: transform, opacity; }
+.mist-c.c1 { background-size: 130% 120%; animation: mc1 5.2s cubic-bezier(.3, .1, .3, 1) forwards; }
+.mist-c.c2 { background-size: 120% 130%; animation: mc2 5.2s cubic-bezier(.3, .1, .3, 1) forwards; }
+.mist-c.c3 { background-size: 160% 140%; animation: mc3 5.2s cubic-bezier(.3, .1, .3, 1) forwards; }
+@keyframes mc1 { 0% { transform: scale(1) translate3d(0, 0, 0); opacity: 1; } 100% { transform: scale(2.4) translate3d(-8%, 6%, 0); opacity: 0; } }
+@keyframes mc2 { 0% { transform: scale(1.2) translate3d(6%, -3%, 0); opacity: .95; } 100% { transform: scale(3) translate3d(14%, 10%, 0); opacity: 0; } }
+@keyframes mc3 { 0% { transform: scale(.9) translate3d(-6%, 4%, 0); opacity: .85; } 100% { transform: scale(2) translate3d(-14%, -8%, 0); opacity: 0; } }
+.mist-title { position: absolute; inset-inline: 0; bottom: -4vh; margin: 0; text-align: center; font-weight: 300; font-size: clamp(10rem, 34vw, 30rem); line-height: 1; color: transparent; -webkit-text-stroke: 1.5px rgba(255, 255, 255, .6); opacity: .55; animation: mt 5.2s ease-out forwards; }
+@keyframes mt { 0% { transform: translateY(0) scale(1); opacity: .6; } 100% { transform: translateY(8vh) scale(.85); opacity: 0; } }
+.mist-ruler { position: absolute; top: 12vh; bottom: 12vh; width: 1px; background: rgba(255, 255, 255, .55); display: flex; flex-direction: column; justify-content: space-between; animation: mr 5.2s ease-out forwards; }
+.mist-ruler.l { inset-inline-start: 2vw; }
+.mist-ruler.r { inset-inline-end: 2vw; }
+.mist-ruler span { position: relative; font-family: 'Unbounded', sans-serif; font-size: .72rem; color: rgba(255, 255, 255, .75); padding-inline: 14px; margin-top: -.5em; }
+.mist-ruler.r span { text-align: end; }
+.mist-ruler span::after { content: ''; position: absolute; top: .6em; inset-inline-start: -5px; width: 9px; height: 1px; background: rgba(255, 255, 255, .7); }
+.mist-dot { position: absolute; inset-inline-start: -3px; width: 7px; height: 7px; border-radius: 50%; background: #ff5a4d; box-shadow: 0 0 12px #ff5a4d; animation: md 4.2s cubic-bezier(.5, 0, .3, 1) forwards; }
+@keyframes md { from { top: 0; } to { top: calc(100% - 7px); } }
+@keyframes mr { 0%, 55% { opacity: 1; } 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .mist { display: none; } }
+
+/* حركة أفضل: السحب تنفتح من المركز نحو الأطراف كأنّ الكاميرا تخترقها، والطبقات تنجرف ببطء باتجاهات متعاكسة، وتتبدّد ببطء بلا قفزات */
+@property --mr { syntax: '<percentage>'; inherits: true; initial-value: 0%; }
+.mist { --mr: 0%; animation: mist-open 6.8s cubic-bezier(.55, .05, .25, 1) forwards; -webkit-mask-image: radial-gradient(ellipse 85% 95% at 50% 58%, transparent calc(var(--mr) - 38%), #000 var(--mr)); mask-image: radial-gradient(ellipse 85% 95% at 50% 58%, transparent calc(var(--mr) - 38%), #000 var(--mr)); }
+@keyframes mist-open { 0%, 8% { --mr: 0%; } 100% { --mr: 150%; } }
+.mist-bg { animation: none; opacity: 1; }
+.mist-c { inset: -20%; opacity: 1; }
+.mist-c.c1 { animation: mc1 7s linear forwards; }
+.mist-c.c2 { animation: mc2 7s linear forwards; }
+.mist-c.c3 { animation: mc3 7s linear forwards; }
+@keyframes mc1 { from { transform: scale(1) translate3d(6%, 0, 0); } to { transform: scale(1.5) translate3d(-10%, 4%, 0); } }
+@keyframes mc2 { from { transform: scale(1.25) translate3d(-6%, -2%, 0); } to { transform: scale(1.9) translate3d(12%, 6%, 0); } }
+@keyframes mc3 { from { transform: scale(1.1) translate3d(2%, 5%, 0); } to { transform: scale(1.7) translate3d(-4%, -8%, 0); } }
+.mist-title { animation: mt2 6.8s cubic-bezier(.4, .1, .2, 1) forwards; }
+@keyframes mt2 { 0% { transform: translateY(14vh) scale(1.05); opacity: 0; filter: blur(10px); } 30% { opacity: .65; filter: blur(0); } 100% { transform: translateY(-2vh) scale(.9); opacity: 0; } }
+.mist-ruler { animation: mr2 6.8s ease-out forwards; }
+@keyframes mr2 { 0%, 70% { opacity: 1; } 100% { opacity: 0; } }
+.mist-dot { animation-duration: 5.4s; }
+
+/* الهبوط عبر السحب: لا طبقة ثنائية الأبعاد بعد الآن — فقط مسطرتا الارتفاع على الجانبين، وعنوان «البصرة» العملاق المفرّغ أسفل الشاشة، ويتأخّر ظهور نص الغلاف حتى ينتهي الهبوط */
+.mist { -webkit-mask-image: none; mask-image: none; animation: mist-fade 7s linear forwards; }
+@keyframes mist-fade { 0%, 80% { opacity: 1; } 100% { opacity: 0; } }
+.mist-bg, .mist-c, .mist-title { display: none; }
+.stage-big { position: absolute; z-index: 4; inset-inline: 0; bottom: -3vh; margin: 0; text-align: center; font-weight: 300; font-size: clamp(8rem, 24vw, 22rem); line-height: 1; color: transparent; -webkit-text-stroke: 1.4px rgba(255, 255, 255, .85); opacity: 0; transform: translateY(24px) scale(.96); transition: opacity 1.6s ease, transform 1.6s cubic-bezier(.22, 1, .36, 1); pointer-events: none; white-space: nowrap; }
+body.descent .stage-big { opacity: .9; transform: none; transition: opacity 1.2s ease, transform 2.4s cubic-bezier(.22, 1, .36, 1); }
+.chap-hero { transition: opacity 1.4s ease .2s; }
+body.descent .chap-hero, body.descent .scroll-hint, body.descent .rail { opacity: 0 !important; }
+.stage-big { transition: opacity .7s ease, transform .7s ease; }
+body:not(.descent) .stage-big { opacity: 0 !important; }
+
+/* بوابة الدخول: النهران يلتقيان */
+.gate { background: linear-gradient(180deg, #060d1f 0%, #0c1d3a 45%, #2a2440 72%, #7a4a3c 100%); }
+.gt-sun { position: absolute; left: 50%; bottom: 6vh; width: min(64vmin, 560px); aspect-ratio: 1; translate: -50% 0; border-radius: 50%; background: radial-gradient(circle, rgba(255, 196, 128, .85), rgba(255, 120, 80, .28) 42%, transparent 68%); filter: blur(6px); animation: g-breathe 6s ease-in-out infinite; transition: transform 1.4s cubic-bezier(.6, 0, .2, 1), opacity 1s; }
+.gt-rivers { position: absolute; inset: 0; width: 100%; height: 100%; transition: transform 1.4s cubic-bezier(.6, 0, .2, 1), opacity .9s; }
+.gt-r { stroke-linecap: round; fill: none; }
+.gt-r.base { stroke: rgba(255, 255, 255, .12); stroke-width: 2; }
+.gt-r.live { stroke: url(#gtg); stroke-width: 2.4; stroke-dasharray: 1; filter: drop-shadow(0 0 6px rgba(255, 200, 140, .7)); transition: stroke-dashoffset .12s linear; }
+.gt-node { fill: #fff; filter: drop-shadow(0 0 10px #ffd9a0); animation: g-breathe 2.4s ease-in-out infinite; transform-origin: 500px 520px; }
+.gt-tl, .gt-tr { position: absolute; top: clamp(18px, 3.4vh, 34px); margin: 0; font-family: 'Unbounded', sans-serif; font-size: .66rem; letter-spacing: .24em; color: rgba(255, 255, 255, .7); direction: ltr; }
+.gt-tl { left: clamp(18px, 3vw, 44px); } .gt-tl b { font-weight: 400; opacity: .55; margin-inline-start: 12px; }
+.gt-tr { right: clamp(18px, 3vw, 44px); font-variant-numeric: tabular-nums; }
+.gt-mid { position: relative; text-align: center; margin-top: -30vh; transition: transform 1.4s cubic-bezier(.6, 0, .2, 1), opacity .9s; }
+.gt-title { margin: 0; font-weight: 200; font-size: clamp(5rem, 17vw, 14rem); line-height: 1.05; letter-spacing: 0; background: linear-gradient(180deg, #fff 30%, #f5d9b3 100%); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 6px 40px rgba(255, 150, 90, .25)); }
+.gt-sub { margin: 6px 0 0; font-weight: 300; font-size: clamp(.95rem, 1.5vw, 1.25rem); letter-spacing: .14em; color: rgba(255, 255, 255, .7); }
+.gt-cue { position: absolute; bottom: clamp(18px, 4vh, 40px); left: 50%; translate: -50% 0; display: flex; flex-direction: column; align-items: center; gap: 12px; transition: opacity .6s; }
+.gt-line { display: block; width: 1px; height: 44px; background: rgba(255, 255, 255, .25); position: relative; overflow: hidden; }
+.gt-line::after { content: ''; position: absolute; inset: 0; background: #fff; transform: translateY(-100%); animation: gt-drip 1.9s cubic-bezier(.6, 0, .3, 1) infinite; }
+@keyframes gt-drip { 0% { transform: translateY(-100%); } 60%, 100% { transform: translateY(100%); } }
+.gate:not(.ready) .gt-line::after { animation: none; }
+.gate.out .gt-mid { transform: scale(1.5); opacity: 0; }
+.gate.out .gt-rivers { transform: scale(1.8); opacity: 0; }
+.gate.out .gt-sun { transform: translate(0, 0) scale(2.6); opacity: 0; }
+.gate.out .gt-cue { opacity: 0; }
+@media (max-width: 700px) { .gt-tl b { display: none; } }
+
+/* بوابة الدخول v3: أسود تحريري راقٍ */
+.gate { background: #07080a; color: #fff; }
+.gx-grain { position: absolute; inset: -50%; opacity: .07; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); animation: gx-gr 1.2s steps(6) infinite; pointer-events: none; }
+@keyframes gx-gr { 0% { transform: translate(0,0); } 20% { transform: translate(-3%, 2%); } 40% { transform: translate(2%, -3%); } 60% { transform: translate(-2%, -1%); } 80% { transform: translate(3%, 3%); } 100% { transform: translate(0,0); } }
+.gx-spot { position: absolute; left: 50%; top: 50%; width: 90vmin; height: 90vmin; translate: -50% -50%; border-radius: 50%; background: radial-gradient(circle, rgba(255, 255, 255, .09), transparent 62%); animation: gx-sp 9s ease-in-out infinite; transition: transform 1.4s cubic-bezier(.6, 0, .2, 1), opacity 1s; }
+@keyframes gx-sp { 0%, 100% { transform: scale(.9); opacity: .7; } 50% { transform: scale(1.1); opacity: 1; } }
+.gx-c { position: absolute; margin: 0; font-family: 'Unbounded', sans-serif; font-weight: 300; font-size: .62rem; letter-spacing: .28em; color: rgba(255, 255, 255, .5); direction: ltr; transition: opacity .6s; }
+.gx-c.tl { top: clamp(20px, 4vh, 40px); left: clamp(20px, 3.4vw, 52px); }
+.gx-c.tr { top: clamp(20px, 4vh, 40px); right: clamp(20px, 3.4vw, 52px); }
+.gx-c.bl { bottom: clamp(20px, 4vh, 40px); left: clamp(20px, 3.4vw, 52px); }
+.gx-c.br { bottom: clamp(20px, 4vh, 40px); right: clamp(20px, 3.4vw, 52px); font-variant-numeric: tabular-nums; color: #fff; }
+.gx-mid { position: relative; display: flex; flex-direction: column; align-items: center; transition: transform 1.4s cubic-bezier(.6, 0, .2, 1), opacity .9s, filter .9s; }
+.gx-en { margin: 0 0 clamp(10px, 2vh, 22px); font-family: 'Unbounded', sans-serif; font-weight: 300; font-size: clamp(.62rem, .8vw, .78rem); letter-spacing: .5em; color: rgba(255, 255, 255, .55); direction: ltr; padding-inline-start: .5em; animation: gx-in 1.4s .2s cubic-bezier(.22, 1, .36, 1) both; }
+.gx-title { margin: 0; font-weight: 200; font-size: clamp(4.4rem, 11.5vw, 10rem); line-height: 1.15; color: #fff; overflow: hidden; }
+.gx-title span { display: block; animation: gx-rise 1.6s .35s cubic-bezier(.22, 1, .36, 1) both; }
+@keyframes gx-rise { from { transform: translateY(110%); filter: blur(10px); } to { transform: none; filter: none; } }
+@keyframes gx-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.gx-bar { width: clamp(160px, 18vw, 260px); height: 1px; background: rgba(255, 255, 255, .16); margin: clamp(14px, 2.4vh, 26px) 0; overflow: hidden; animation: gx-in 1.4s .7s both; }
+.gx-bar i { display: block; height: 100%; background: #fff; transform-origin: left; }
+.gx-sub { margin: 0; font-weight: 300; font-size: clamp(.85rem, 1.1vw, 1rem); letter-spacing: .18em; color: rgba(255, 255, 255, .6); animation: gx-in 1.4s .9s both; }
+.gx-cue { position: absolute; bottom: clamp(20px, 4vh, 40px); left: 50%; translate: -50% 0; display: flex; flex-direction: column; align-items: center; gap: 12px; font-family: 'Unbounded', sans-serif; font-weight: 300; font-size: .6rem; letter-spacing: .34em; color: #fff; opacity: 0; transition: opacity .8s; direction: ltr; }
+.gate.ready .gx-cue { opacity: 1; }
+.gx-cue i { width: 1px; height: 38px; background: rgba(255, 255, 255, .22); position: relative; overflow: hidden; }
+.gx-cue i::after { content: ''; position: absolute; inset: 0; background: #fff; transform: translateY(-100%); animation: gt-drip 1.9s cubic-bezier(.6, 0, .3, 1) infinite; }
+.gate.ready .gx-c.br, .gate.ready .gx-c.bl { opacity: 0; }
+.gate.out .gx-mid { transform: scale(1.35); opacity: 0; filter: blur(12px); }
+.gate.out .gx-spot { transform: scale(2.4); opacity: 0; }
+.gate.out .gx-cue, .gate.out .gx-c { opacity: 0; }

@@ -254,7 +254,13 @@ function Journey() {
       chapRefs.current.forEach((el, i) => el && el.classList.toggle('on', i === active))
       dotRefs.current.forEach((d, i) => { if (!d) return; d.classList.toggle('on', i === active); d.classList.toggle('near', Math.abs(i - active) === 1) })
     })
+    const enter = () => scene && scene.startDescent && scene.startDescent()
+    const back = () => scene && scene.resetDescent && scene.resetDescent()
+    window.addEventListener('basra-enter', enter)
+    window.addEventListener('basra-gate', back)
     return () => {
+      window.removeEventListener('basra-enter', enter)
+      window.removeEventListener('basra-gate', back)
       unsub()
       scene && scene.dispose()
     }
@@ -787,10 +793,115 @@ function Footer() {
   )
 }
 
+function Mist() {
+  return (
+    <div className="mist" aria-hidden="true">
+      {['l', 'r'].map((sd) => (
+        <div key={sd} className={'mist-ruler ' + sd}>
+          {['٧٠٠', '٦٠٠', '٥٠٠', '٤٠٠', '٣٠٠', '٢٠٠'].map((n) => (<span key={n}>{n}</span>))}
+          <i className="mist-dot" />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function Gate() {
+  const [pr, setPr] = useState(0)
+  const [out, setOut] = useState(false)
+  const [gone, setGone] = useState(false)
+  const [mist, setMist] = useState(false)
+  const away = useRef(false)
+  const armAt = useRef(0)
+  const evs = ['wheel', 'touchstart', 'keydown', 'click']
+  const ready = pr >= 1
+  useEffect(() => {
+    if (gone || pr >= 1) return
+    document.documentElement.style.overflow = 'hidden'
+    const t0 = performance.now()
+    let raf = 0
+    const tick = (now) => {
+      const k = Math.min(1, (now - t0) / 2600)
+      setPr(1 - Math.pow(1 - k, 2.2))
+      if (k < 1) raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [gone])
+  useEffect(() => {
+    if (!ready || out || gone) return
+    const go = (e) => {
+      if (performance.now() < armAt.current || (e && e.type === 'wheel' && e.deltaY <= 0)) {
+        evs.forEach((n) => window.addEventListener(n, go, { once: true, passive: true }))
+        return
+      }
+      setOut(true)
+      setMist(true)
+      document.body.classList.add('descent')
+      setTimeout(() => document.body.classList.remove('descent'), 7000)
+      window.dispatchEvent(new Event('basra-enter'))
+      document.documentElement.style.overflow = ''
+      window.scrollTo(0, 0)
+      setTimeout(() => setGone(true), 1400)
+      setTimeout(() => setMist(false), 7400)
+    }
+    evs.forEach((e) => window.addEventListener(e, go, { once: true, passive: true }))
+    return () => evs.forEach((e) => window.removeEventListener(e, go))
+  }, [ready, out, gone])
+  /* العودة إلى أعلى الصفحة تُعيد شاشة الدخول كما كانت */
+  useEffect(() => {
+    if (!gone) return
+    const on = () => {
+      if (window.scrollY > 240) away.current = true
+      if (away.current && window.scrollY < 6) {
+        away.current = false
+        armAt.current = performance.now() + 1200
+        document.documentElement.style.overflow = 'hidden'
+        document.body.classList.remove('descent')
+        window.dispatchEvent(new Event('basra-gate'))
+        setOut(true)
+        setGone(false)
+        requestAnimationFrame(() => requestAnimationFrame(() => setOut(false)))
+      }
+    }
+    window.addEventListener('scroll', on, { passive: true })
+    return () => window.removeEventListener('scroll', on)
+  }, [gone])
+  if (gone && !mist) return null
+  const N = 120
+  const lit = Math.round(pr * N)
+  return (
+    <>
+      {!gone && (
+    <div className={'gate' + (out ? ' out' : '') + (ready ? ' ready' : '')} role="dialog" aria-label="مرحباً بك في البصرة">
+        <div className="gx-grain" aria-hidden="true" />
+        <div className="gx-spot" aria-hidden="true" />
+        <p className="gx-c tl">EST. 636 AD</p>
+        <p className="gx-c tr">IRAQ</p>
+        <p className="gx-c bl">30.5°N — 47.8°E</p>
+        <p className="gx-c br">{String(Math.round(pr * 100)).padStart(3, '0')}</p>
+        <div className="gx-mid">
+          <p className="gx-en">B A S R A</p>
+          <h2 className="gx-title"><span>البصرة</span></h2>
+          <div className="gx-bar"><i style={{ transform: `scaleX(${pr})` }} /></div>
+          <p className="gx-sub">حيث يلتقي النهران</p>
+        </div>
+        <div className="gx-cue">
+          <span>SCROLL TO EXPLORE</span>
+          <i />
+        </div>
+      </div>
+      )}
+      {mist && <Mist />}
+    </>
+  )
+}
+
 export default function App() {
   useReveal()
   return (
     <>
+      <Gate />
       <Nav />
       <main>
         <Journey />

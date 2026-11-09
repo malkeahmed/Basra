@@ -121,7 +121,7 @@ export function createSky({ low = false } = {}) {
           nc += vec3(0.55, 0.62, 0.9) * pow(max(md, 0.0), 90.0) * 0.5;
           col = mix(col, nc, n);
         }
-        if (h < 0.0) col = mix(horizon, vec3(0.05, 0.07, 0.17), smoothstep(0.0, 1.0, uNight));
+        if (h < 0.0) col = mix(col, vec3(0.05, 0.07, 0.17), smoothstep(0.0, 1.0, uNight));
         gl_FragColor = vec4(col, 1.0);
       }`,
   })

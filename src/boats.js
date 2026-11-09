@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 
 /*
   سفن وقوارب البصرة: مشحوف، سنبوك شراعي، ناقلة نفط، سفينة حاويات، سفينة بضائع بروافع، بارجة وقاطرة.
@@ -763,5 +764,47 @@ export function makeFlag(scale = 1, height = 12) {
   const f = new THREE.Mesh(new THREE.PlaneGeometry(4.2 * scale, 2.8 * scale, 18, 6), flagMaterial())
   f.position.set(2.1 * scale, height - 1.6 * scale, 0)
   g.add(f)
+  return g
+}
+
+/* سفينة شحن واقعية من نموذج GLB (Cargo ship by hungry_drifter، CC BY) */
+export function makeCargoShipGLB({ L = 64, file = 'assets/cargo-ship.glb', flip = false, beam = 0.17 } = {}) {
+  const g = new THREE.Group()
+  const B = L * beam
+  g.userData = { draft: L * 0.045, L, B, kind: 'ship', cranes: [] }
+  new GLTFLoader().load(file, (gltf) => {
+    const m = gltf.scene
+    let box = new THREE.Box3().setFromObject(m)
+    let size = box.getSize(new THREE.Vector3())
+    if (size.z > size.x) {
+      m.rotation.y = Math.PI / 2
+      m.updateMatrixWorld(true)
+      box = new THREE.Box3().setFromObject(m)
+      size = box.getSize(new THREE.Vector3())
+    }
+    if (flip) {
+      m.rotation.y += Math.PI
+      m.updateMatrixWorld(true)
+      box = new THREE.Box3().setFromObject(m)
+      size = box.getSize(new THREE.Vector3())
+    }
+    const k = L / size.x
+    const holder = new THREE.Group()
+    holder.add(m)
+    holder.scale.setScalar(k)
+    const c = box.getCenter(new THREE.Vector3())
+    m.position.set(-c.x, -box.min.y, -c.z)
+    holder.userData.size = size.clone().multiplyScalar(k)
+    m.traverse((o) => {
+      if (o.isMesh) {
+        o.castShadow = true
+        o.receiveShadow = true
+        if (o.material) { o.material.envMapIntensity = 0.9; o.material.needsUpdate = true }
+      }
+    })
+    holder.position.y = g.userData.draft - size.y * k * 0.2
+    g.add(holder)
+    console.log('cargo glb size', size.x * k, size.y * k, size.z * k)
+  })
   return g
 }

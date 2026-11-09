@@ -310,5 +310,31 @@
   "page": "https://commons.wikimedia.org/wiki/Category:Date_palms_in_Iraq",
   "via": "Wikimedia Commons / Library of Congress",
   "credit": "Library of Congress, public domain, via Wikimedia Commons"
+ },
+ {
+  "file": "assets/cargo-ship.glb",
+  "media": "3d-model",
+  "title": "Cargo ship",
+  "creator": "hungry_drifter",
+  "license": "CC BY 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/4.0",
+  "creditRequired": true,
+  "page": "https://sketchfab.com/3d-models/cargo-ship-b7c97df584824ca682d26daabf401f87"
+ },
+ {
+  "file": "assets/cargo-ship-02.glb",
+  "media": "3d-model",
+  "title": "Cargo ship 02 (container ship)",
+  "creator": "see Sketchfab page — author to be confirmed",
+  "license": "to be confirmed",
+  "creditRequired": true
+ },
+ {
+  "file": "assets/sea-wave.jpg",
+  "media": "image",
+  "title": "Sea wave (Deniz Dalgasi) texture",
+  "creator": "author to be confirmed (Sketchfab)",
+  "license": "to be confirmed",
+  "creditRequired": true
  }
 ]
