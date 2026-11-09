@@ -1,6 +1,12 @@
 import * as THREE from 'three'
 import { makePalmVariants, makeReeds, makeGrass, swayMaterial } from './palm.js'
-import { createPort, portBlend, portMask, inPort } from './port.js'
+import { createPort, portBlend, portMask, inPort, makeGateSign } from './port.js'
+import { createSky, SKY_HAZE } from './sky.js'
+import { createBridge } from './bridge.js'
+import { createStadium, stadBlend, inStad } from './stadium.js'
+import { createOilField, oilBlend, inOil } from './oilfield.js'
+import { createCorniche, cornBlend, cornMask, inCorn } from './corniche.js'
+import { createStatuePlaza, plazaBlend, plazaMask, inPlaza } from './statue.js'
 import { makeMashoof, makeDhow, makeTanker, makeContainerShip, makeCargoShip, makeBargeTug, makeWake, animateVessel, shipUniforms } from './boats.js'
 
 /* مجسّم البصرة: نهر يتلوّى بين رمال ذهبية ونخيل وزوارق، تطير الكاميرا فوقه مع التمرير */
@@ -19,12 +25,6 @@ const rng = (seed) => {
   return () => (s = (s * 16807) % 2147483647) / 2147483647
 }
 
-const ISL = { z: -235, off: 66, rx: 28, rz: 42 }
-function islandK(x, z) {
-  const cx = riverX(z) + ISL.off
-  const d = Math.hypot((x - cx) / ISL.rx, (z - ISL.z) / ISL.rz)
-  return 1 - THREE.MathUtils.smoothstep(d, 0.55, 1.0)
-}
 function terrainH(x, z) {
   const d = Math.abs(x - riverX(z))
   const w = halfW(z)
@@ -32,9 +32,7 @@ function terrainH(x, z) {
   const bank = THREE.MathUtils.smoothstep(d, w - 1, w + 11)
   let h = THREE.MathUtils.lerp(-2.4, 0.7 + dune * 0.55, bank)
   if (d > w + 36) h += (d - w - 36) * 0.07
-  const isl = islandK(x, z)
-  if (isl > 0) h = Math.max(h, -2.4 + isl * 3.4 + Math.sin(x * 0.4) * Math.cos(z * 0.3) * 0.15 * isl)
-  return portBlend(h, x, z, riverX(z), halfW(z))
+  return stadBlend(oilBlend(cornBlend(plazaBlend(portBlend(h, x, z, riverX(z), halfW(z)), x, z, riverX(z), halfW(z)), x, z, riverX(z), halfW(z)), x, z, riverX(z), halfW(z)), x, z, riverX(z), halfW(z))
 }
 
 /*
@@ -42,44 +40,76 @@ function terrainH(x, z) {
   u = البعد عن الضفة اليسرى نحو النهر. المسار يعبر النهر يميناً ويساراً ويدور حول الجزيرة
   ثم يصعد فوق الميناء. الاستيفاء هيرميتي سلس بلا اهتزاز.
 */
-const ISLAND_U = 171
-const WAYPOINTS = (() => {
-  const w = [
-    [0.0, [58, 42, 30], [112, 0, -150], 50, 0],
-    [0.06, [40, 26, -40], [105, 1, -150], 52, -2],
-    [0.12, [22, 12, -95], [80, 2, -150], 54, -3],
-    [0.17, [48, 9, -125], [150, 3, -175], 56, 3],
-    [0.23, [88, 7, -155], [190, 4, -215], 58, 4],
-    [0.29, [112, 9, -178], [150, 6, -232], 54, 0],
-  ]
-  /* مدار حول جزيرة النخيل: زاوية ١٨٠° إلى ‎-٩٩°‎ */
-  const n = 16
-  for (let i = 0; i <= n; i++) {
-    const k = i / n
-    const p = 0.33 + k * 0.24
-    const th = Math.PI * (1.0 - 1.55 * k)
-    w.push([p, [ISLAND_U + 48 * Math.cos(th), 16 - 4 * k, -235 + 48 * Math.sin(th)], [ISLAND_U, 5, -235], 50, Math.sin(k * Math.PI) * -3])
-  }
-  w.push(
-    [0.6, [150, 8, -300], [60, 7, -335], 52, 0],
-    [0.66, [120, 6, -330], [40, 8, -345], 56, 3],
-    [0.72, [90, 8, -350], [10, 10, -368], 54, 2],
-    [0.78, [64, 18, -360], [-10, 12, -385], 52, 0],
-    [0.84, [58, 26, -392], [-25, 12, -410], 50, 0],
-    [0.9, [52, 38, -425], [-30, 6, -445], 48, -3],
-    [0.95, [64, 52, -455], [-35, 0, -480], 46, -2],
-    [1.0, [50, 74, -440], [-20, 0, -510], 44, 0]
-  )
-  return w
+/* موضع تمثال السيّاب (u: البعد عن الضفة اليسرى، z) */
+const STAT = (() => {
+  const z0 = -262
+  const q = -9.7
+  const dx = riverX(z0 - 1) - riverX(z0 + 1)
+  const l = Math.hypot(dx, 2)
+  const fx = dx / l
+  const fz = -2 / l
+  const x = riverX(z0) - halfW(z0) + 0.3 + -fz * q
+  const z = z0 + fx * q
+  return { u: x - (riverX(z) - halfW(z)), z }
 })()
+const SU = STAT.u
+const SZ = STAT.z
+/* لافتة «ميناء أم قصر» بين النخيل قرب الماء، قبل بداية الرصيف */
+const SIGN = { z: -349, q: -8 }
+const inSignZone = (x, z) => z < SIGN.z + 12 && z > SIGN.z - 12 && x - leftBank(z) < 3 && x - leftBank(z) > -20
+const WAYPOINTS = [
+  [0.0, [112, 70, 300], [112, 16, 105], 64, 0],
+  [0.03, [112, 62, 270], [112, 17, 105], 58, 0],
+  [0.06, [100, 16, 175], [112, 17, 105], 60, -1],
+  [0.085, [106, 8.5, 128], [112, 19, 96], 68, -2],
+  [0.105, [108, 8, 100], [112, 20, 84], 72, 0],
+  [0.125, [100, 9, 78], [100, 6, 20], 62, 1],
+  [0.15, [150, 11, 34], [208, 6, -6], 58, 0],
+  [0.18, [168, 9, -14], [212, 5, -50], 56, 1],
+  [0.21, [156, 9, -60], [212, 6, -96], 56, 1],
+  [0.24, [150, 10, -110], [212, 6, -146], 55, 0],
+  [0.27, [140, 10, -150], [205, 6, -190], 54, 0],
+  [0.285, [112, 11, -195], [60, 9, -245], 54, 0],
+  [0.31, [SU + 80, 10, SZ + 30], [SU, 8.4, SZ], 52, 1],
+  [0.34, [SU + 40, 9, SZ + 13], [SU, 8.6, SZ], 48, 1],
+  [0.37, [SU + 26, 7.4, SZ + 6], [SU, 8.7, SZ], 46, 0],
+  [0.40, [SU + 12, 7.6, SZ + 2.5], [SU, 9.1, SZ], 44, 0],
+  [0.43, [SU + 24, 7.4, SZ - 6], [SU, 8.7, SZ], 46, -1],
+  [0.46, [SU + 40, 9.5, SZ - 16], [SU, 8.4, SZ - 2], 49, 0],
+  [0.50, [120, 9, -246], [232, 11, -236], 58, 1],
+  [0.535, [210, 8.5, -218], [238, 9.5, -229], 44, 0],
+  [0.565, [196, 9.5, -250], [242, 12, -276], 54, 1],
+  [0.60, [190, 12, -292], [246, 17, -300], 58, 1],
+  [0.628, [168, 26, -330], [240, 12, -360], 58, 1],
+  [0.652, [176, 12, -346], [218, 10.5, -358], 46, 0],
+  [0.67, [176, 56, -362], [268, 6, -398], 58, 0],
+  [0.70, [188, 62, -398], [268, 5, -398], 58, -1],
+  [0.722, [208, 8, -426], [252, 11, -404], 46, -1],
+  [0.745, [196, 11, -440], [255, 11, -400], 48, -1],
+  [0.76, [128, 15, -418], [60, 8, -382], 54, 0],
+  [0.78, [64, 18, -360], [-10, 12, -385], 52, 0],
+  [0.84, [58, 26, -392], [-25, 12, -410], 50, 0],
+  [0.9, [52, 38, -425], [-30, 6, -445], 48, -3],
+  [0.95, [64, 52, -455], [-35, 0, -480], 46, -2],
+  [0.975, [58, 86, -446], [-26, 4, -496], 48, 0],
+  [1.0, [46, 112, -438], [-8, -4, -505], 50, 0],
+]
 function makeTrack(get) {
   const T = WAYPOINTS.map((k) => k[0])
   const Y = WAYPOINTS.map(get)
   const n = T.length
+  /* ميول أحادية الاتجاه (Fritsch–Carlson): بلا تجاوز أو اهتزاز بين النقاط */
+  const dl = []
+  for (let i = 0; i < n - 1; i++) dl.push((Y[i + 1] - Y[i]) / (T[i + 1] - T[i]))
   const m = Y.map((_, i) => {
-    if (i === 0) return (Y[1] - Y[0]) / (T[1] - T[0])
-    if (i === n - 1) return (Y[n - 1] - Y[n - 2]) / (T[n - 1] - T[n - 2])
-    return ((Y[i + 1] - Y[i - 1]) / (T[i + 1] - T[i - 1])) * 0.9
+    if (i === 0) return dl[0]
+    if (i === n - 1) return dl[n - 2]
+    if (dl[i - 1] * dl[i] <= 0) return 0
+    const h0 = T[i] - T[i - 1]
+    const h1 = T[i + 1] - T[i]
+    const w1 = 2 * h1 + h0
+    const w2 = h1 + 2 * h0
+    return (w1 + w2) / (w1 / dl[i - 1] + w2 / dl[i])
   })
   return (t) => {
     t = Math.min(1, Math.max(0, t))
@@ -175,19 +205,20 @@ function grassTexture() {
 export function createScene(canvas, { low = false } = {}) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: !low, alpha: false, powerPreference: 'high-performance' })
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, low ? 1.4 : 2))
-  renderer.setClearColor(PAPER)
+  renderer.setClearColor(SKY_HAZE)
   if (!low) {
     renderer.shadowMap.enabled = true
     renderer.shadowMap.type = THREE.PCFSoftShadowMap
   }
 
   const scene = new THREE.Scene()
-  scene.background = new THREE.Color(PAPER)
-  scene.fog = new THREE.Fog(PAPER, 110, low ? 330 : 440)
+  scene.background = new THREE.Color(SKY_HAZE)
+  scene.fog = new THREE.Fog(SKY_HAZE, 260, low ? 620 : 900)
 
-  const camera = new THREE.PerspectiveCamera(52, 1, 0.5, 1400)
+  const camera = new THREE.PerspectiveCamera(52, 1, 0.5, 14000)
 
-  scene.add(new THREE.HemisphereLight(0xfffaf0, 0x8aa05a, 1.1))
+  const hemi = new THREE.HemisphereLight(0xdbeaff, 0x8aa05a, 1.1)
+  scene.add(hemi)
   const sun = new THREE.DirectionalLight(0xfff0d2, 2.0)
   sun.position.set(-50, 60, 20)
   if (!low) {
@@ -206,20 +237,19 @@ export function createScene(canvas, { low = false } = {}) {
   scene.add(sun, sun.target)
   const uTime = { value: 0 }
 
-  /* الشمس البعيدة */
-  const disc = new THREE.Mesh(new THREE.CircleGeometry(62, 64), new THREE.MeshBasicMaterial({ color: 0xe3c58d, fog: false }))
-  disc.position.set(0, 52, -640)
-  scene.add(disc)
-  const halo = new THREE.Mesh(new THREE.CircleGeometry(96, 64), new THREE.MeshBasicMaterial({ color: 0xf1e1bb, fog: false }))
-  halo.position.set(0, 52, -645)
-  scene.add(halo)
+  /* الجسر الإيطالي (جسر محمد باقر الصدر) */
+  const bridge = createBridge(scene, { riverX, halfW, low })
+
+  /* سماء زرقاء بغيوم ركامية وشمس */
+  const sky = createSky({ low })
+  scene.add(sky)
 
   /* التضاريس */
   const tw = 440
-  const tl = 700
-  const tg = new THREE.PlaneGeometry(tw, tl, low ? 90 : 130, low ? 130 : 190)
+  const tl = 900
+  const tg = new THREE.PlaneGeometry(tw, tl, low ? 90 : 130, low ? 160 : 240)
   tg.rotateX(-Math.PI / 2)
-  tg.translate(0, 0, -250)
+  tg.translate(0, 0, -200)
   const tp = tg.attributes.position
   const cols = new Float32Array(tp.count * 3)
   const mud = new THREE.Color(0x4a3a22)
@@ -238,10 +268,8 @@ export function createScene(canvas, { low = false } = {}) {
     const patch = 0.5 + 0.5 * Math.sin(x * 0.045 + Math.sin(z * 0.03) * 2.0) * Math.cos(z * 0.037 - x * 0.012)
     tmp.copy(lush).lerp(meadow, patch)
     tmp.lerp(olive, THREE.MathUtils.clamp(h * 0.12 + Math.max(0, d - 30) * 0.008, 0, 0.55))
-    const ik = islandK(x, z)
-    tmp.lerp(mud, (1 - k) * 0.85 * (1 - Math.min(1, ik * 2.2)))
-    if (ik > 0 && ik < 0.45) tmp.lerp(new THREE.Color(0xb9a77a), (1 - ik / 0.45) * 0.7)
-    const pmk = portMask(x, z, riverX(z), halfW(z))
+    tmp.lerp(mud, (1 - k) * 0.85)
+    const pmk = Math.max(portMask(x, z, riverX(z), halfW(z)), plazaMask(x, z, riverX(z), halfW(z)))
     if (pmk > 0.02) tmp.lerp(new THREE.Color(0x77705f), Math.min(1, pmk * 1.2))
     tmp.offsetHSL((r1() - 0.5) * 0.015, (r1() - 0.5) * 0.06, (r1() - 0.5) * 0.04)
     cols[i * 3] = tmp.r
@@ -255,9 +283,9 @@ export function createScene(canvas, { low = false } = {}) {
   scene.add(terrain)
 
   /* النهر */
-  const rows = 240
+  const rows = 330
   const cl = 14
-  const z0 = 30
+  const z0 = 260
   const z1 = -560
   const wp = new Float32Array((rows + 1) * (cl + 1) * 3)
   const widx = []
@@ -296,7 +324,8 @@ export function createScene(canvas, { low = false } = {}) {
     side: THREE.DoubleSide,
     uniforms: {
       uTime: { value: 0 },
-      uFogColor: { value: new THREE.Vector3(0.969, 0.941, 0.886) },
+      uFogColor: { value: new THREE.Vector3(0.66, 0.82, 0.96) },
+      uDim: { value: 1 },
       uFogNear: { value: scene.fog.near },
       uFogFar: { value: scene.fog.far },
     },
@@ -318,6 +347,7 @@ export function createScene(canvas, { low = false } = {}) {
       varying vec2 vUv;
       uniform float uTime;
       uniform vec3 uFogColor;
+      uniform float uDim;
       uniform float uFogNear;
       uniform float uFogFar;
       float hgt(vec2 p) {
@@ -355,7 +385,7 @@ export function createScene(canvas, { low = false } = {}) {
 
         vec3 R = reflect(-V, n);
         float sky = clamp(R.y * 1.6, 0.0, 1.0);
-        vec3 skyCol = mix(vec3(0.99, 0.93, 0.80), vec3(0.62, 0.78, 0.86), sky);
+        vec3 skyCol = mix(vec3(0.72, 0.86, 0.97), vec3(0.33, 0.60, 0.92), sky);
         vec3 col = mix(body, skyCol, fres);
 
         vec3 L = normalize(vec3(-0.05, 0.28, -1.0));
@@ -368,12 +398,74 @@ export function createScene(canvas, { low = false } = {}) {
         float d = length(vWorld - cameraPosition);
         col = mix(col, uFogColor, smoothstep(uFogNear, uFogFar, d));
         float alpha = smoothstep(0.0, 2.5, dEdge);
-        gl_FragColor = vec4(col, alpha);
+        gl_FragColor = vec4(col * uDim, alpha);
       }
     `,
   })
   const water = new THREE.Mesh(wg, waterMat)
   scene.add(water)
+
+  /* بحر بعيد طبيعي: يملأ الأفق خلف النهر بدل الخلفية الزرقاء المسطّحة — تموّج هادئ، انعكاس السماء ولمعان الشمس */
+  const seaMat = new THREE.ShaderMaterial({
+    fog: false,
+    uniforms: { uTime: { value: 0 }, uHaze: { value: new THREE.Vector3(0.66, 0.82, 0.96) }, uDim: { value: 1 } },
+    vertexShader: `
+      varying vec3 vWorld;
+      void main() {
+        vec4 w = modelMatrix * vec4(position, 1.0);
+        vWorld = w.xyz;
+        gl_Position = projectionMatrix * viewMatrix * w;
+      }
+    `,
+    fragmentShader: `
+      varying vec3 vWorld;
+      uniform float uTime;
+      uniform vec3 uHaze;
+      uniform float uDim;
+      float hgt(vec2 p) {
+        float t = uTime * 0.55;
+        float h = sin(p.x * 0.045 + t * 0.8) * 0.5;
+        h += sin(p.y * 0.06 - t * 0.7 + p.x * 0.03) * 0.5;
+        h += sin((p.x + p.y) * 0.11 + t * 1.1) * 0.32;
+        h += sin(p.x * 0.27 - p.y * 0.21 + t * 1.6) * 0.2;
+        h += sin(p.x * 0.63 + p.y * 0.51 - t * 2.1) * 0.12;
+        h += sin(p.x * 1.4 - p.y * 1.1 + t * 2.8) * 0.06;
+        return h;
+      }
+      void main() {
+        vec2 p = vWorld.xz;
+        float d = length(vWorld - cameraPosition);
+        float e = 0.5;
+        float amp = 0.5;
+        vec3 n = normalize(vec3(-(hgt(p + vec2(e, 0.0)) - hgt(p - vec2(e, 0.0))) / (2.0 * e) * amp, 1.0, -(hgt(p + vec2(0.0, e)) - hgt(p - vec2(0.0, e))) / (2.0 * e) * amp));
+        vec3 V = normalize(cameraPosition - vWorld);
+        float ndv = max(dot(n, V), 0.0);
+        float fres = 0.02 + 0.98 * pow(1.0 - ndv, 3.6);
+        vec3 deep = vec3(0.04, 0.27, 0.34);
+        vec3 shallow = vec3(0.16, 0.45, 0.48);
+        float patch = 0.5 + 0.5 * sin(p.x * 0.011 + p.y * 0.008) * sin(p.y * 0.006 - p.x * 0.004);
+        vec3 body = mix(deep, shallow, patch);
+        float sss = pow(1.0 - ndv, 2.0) * 0.18;
+        body += vec3(0.02, 0.10, 0.09) * sss;
+        vec3 R = reflect(-V, n);
+        float sky = clamp(R.y * 1.4, 0.0, 1.0);
+        vec3 skyCol = mix(vec3(0.82, 0.90, 0.95), vec3(0.34, 0.60, 0.90), sky);
+        vec3 col = mix(body, skyCol, fres);
+        vec3 L = normalize(vec3(-0.05, 0.28, -1.0));
+        float sp = max(dot(R, L), 0.0);
+        col += vec3(1.0, 0.93, 0.74) * (pow(sp, 160.0) * 2.4 + pow(sp, 14.0) * 0.26);
+        float crest = smoothstep(0.62, 0.95, hgt(p * 1.0 + vec2(uTime * 0.4, 0.0)) * 0.55 + 0.5);
+        col = mix(col, vec3(0.92, 0.96, 0.97), crest * 0.1 * (1.0 - smoothstep(60.0, 700.0, d)));
+        col = mix(col, uHaze, smoothstep(1700.0, 7000.0, d) * 0.9);
+        gl_FragColor = vec4(col * uDim, 1.0);
+      }
+    `,
+  })
+  const sea = new THREE.Mesh(new THREE.PlaneGeometry(16000, 16000, 1, 1), seaMat)
+  sea.rotation.x = -Math.PI / 2
+  sea.position.set(0, -0.7, -200)
+  sea.renderOrder = -1
+  scene.add(sea)
 
   /* النخيل */
   const variants = makePalmVariants()
@@ -384,13 +476,13 @@ export function createScene(canvas, { low = false } = {}) {
   let placed = 0
   let guard = 0
   while (placed < palmCount && guard++ < 5000) {
-    const z = -60 - r2() * (RIVER_LEN - 70)
+    const z = r2() < 0.2 ? 240 - r2() * 230 : -60 - r2() * (RIVER_LEN - 70)
     const side = r2() < 0.88 ? -1 : 1
     const grove = Math.sin(z * 0.05) * 0.5 + 0.5
     const gap = halfW(z) + 2 + r2() * (4 + 26 * (1 - grove))
     if (r2() > 0.35 + grove * 0.65) continue
     const x = riverX(z) + side * gap
-    if (inPort(x, z, riverX(z), halfW(z), 0.001) || (side < 0 && z < -360 && z > -510 && gap < halfW(z) + 60)) continue
+    if (inPort(x, z, riverX(z), halfW(z), 0.001) || inPlaza(x, z, riverX(z), halfW(z), 0.001) || inCorn(x, z, riverX(z), halfW(z), 0.001) || inOil(x, z, riverX(z), halfW(z), 0.001) || inStad(x, z, riverX(z), halfW(z), 0.001) || inSignZone(x, z) || (side < 0 && z < -360 && z > -510 && gap < halfW(z) + 60)) continue
     const y = terrainH(x, z) - 0.25
     const sc = 0.8 + r2() * 0.55
     dummy.position.set(x, y, z)
@@ -399,16 +491,6 @@ export function createScene(canvas, { low = false } = {}) {
     dummy.updateMatrix()
     mats[Math.floor(r2() * variants.length)].push(dummy.matrix.clone())
     placed++
-  }
-  for (let n = 0; n < (low ? 24 : 70); n++) {
-    const z = ISL.z + (r2() - 0.5) * ISL.rz * 1.5
-    const x = riverX(z) + ISL.off + (r2() - 0.5) * ISL.rx * 1.5
-    if (islandK(x, z) < 0.62) continue
-    dummy.position.set(x, terrainH(x, z) - 0.25, z)
-    dummy.rotation.set((r2() - 0.5) * 0.08, r2() * Math.PI * 2, (r2() - 0.5) * 0.08)
-    dummy.scale.setScalar(0.7 + r2() * 0.6)
-    dummy.updateMatrix()
-    mats[Math.floor(r2() * variants.length)].unshift(dummy.matrix.clone())
   }
   const trunkMat = swayMaterial(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1 }), uTime, 0.6)
   const frondMat = swayMaterial(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.7, side: THREE.DoubleSide }), uTime, 0.6, true)
@@ -437,12 +519,12 @@ export function createScene(canvas, { low = false } = {}) {
   const reeds = new THREE.InstancedMesh(reedGeo, swayMaterial(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, side: THREE.DoubleSide }), uTime, 3.0), reedCount)
   const r4 = rng(555)
   for (let i = 0; i < reedCount; i++) {
-    const z = -10 - r4() * (RIVER_LEN + 40)
+    const z = 250 - r4() * (RIVER_LEN + 290)
     const side = r4() < 0.85 ? -1 : 1
     const x = riverX(z) + side * (halfW(z) + 0.2 + r4() * 4.5)
     dummy.position.set(x, terrainH(x, z) - 0.15, z)
     dummy.rotation.set(0, r4() * 6.28, 0)
-    dummy.scale.setScalar(inPort(x, z, riverX(z), halfW(z), 0.001) ? 0 : 0.8 + r4() * 1.1)
+    dummy.scale.setScalar(inPort(x, z, riverX(z), halfW(z), 0.001) || inPlaza(x, z, riverX(z), halfW(z), 0.001) || inCorn(x, z, riverX(z), halfW(z), 0.001) || inOil(x, z, riverX(z), halfW(z), 0.001) || inStad(x, z, riverX(z), halfW(z), 0.001) || inSignZone(x, z) ? 0 : 0.8 + r4() * 1.1)
     dummy.updateMatrix()
     reeds.setMatrixAt(i, dummy.matrix)
   }
@@ -456,18 +538,14 @@ export function createScene(canvas, { low = false } = {}) {
   const r5 = rng(909)
   const gc = new THREE.Color()
   for (let i = 0; i < grassCount; i++) {
-    const z = 10 - r5() * (RIVER_LEN + 60)
+    const z = 250 - r5() * (RIVER_LEN + 310)
     const side = r5() < 0.5 ? -1 : 1
     const off = halfW(z) + 1.2 + Math.pow(r5(), 1.6) * 62
-    let x = riverX(z) + side * off
-    let zz = z
-    if (i % 11 === 0) {
-      zz = ISL.z + (r5() - 0.5) * ISL.rz * 1.7
-      x = riverX(zz) + ISL.off + (r5() - 0.5) * ISL.rx * 1.7
-    }
+    const x = riverX(z) + side * off
+    const zz = z
     dummy.position.set(x, terrainH(x, zz) - 0.05, zz)
     dummy.rotation.set(0, r5() * 6.28, 0)
-    dummy.scale.setScalar(inPort(x, zz, riverX(zz), halfW(zz), 0.001) || (i % 11 === 0 && islandK(x, zz) < 0.5) ? 0 : 0.9 + r5() * 1.4)
+    dummy.scale.setScalar(inPort(x, zz, riverX(zz), halfW(zz), 0.001) || inPlaza(x, zz, riverX(zz), halfW(zz), 0.001) || inCorn(x, zz, riverX(zz), halfW(zz), 0.001) || inOil(x, zz, riverX(zz), halfW(zz), 0.001) || inStad(x, zz, riverX(zz), halfW(zz), 0.001) || inSignZone(x, zz) ? 0 : 0.9 + r5() * 1.4)
     dummy.updateMatrix()
     grass.setMatrixAt(i, dummy.matrix)
     gc.setHSL(0.24 + (r5() - 0.5) * 0.05, 0.55 + r5() * 0.2, 0.62 + r5() * 0.35)
@@ -479,6 +557,14 @@ export function createScene(canvas, { low = false } = {}) {
   /* القوارب والسفن */
   const darkMat = new THREE.MeshStandardMaterial({ color: INK, roughness: 0.8, flatShading: true })
   const boats = []
+  /* عوائق ثابتة: رصيف المنارة وعوّامات الملاحة الحمراء والخضراء */
+  const obst = [{ zE: -512, off: -82, hz: 6, hx: 30, moored: true, waiting: false }]
+  for (let i = 0; i < 9; i++) {
+    const zb = -330 - i * 22
+    obst.push({ zE: zb, off: -halfW(zb) + 0.3 + 34, hz: 1.6, hx: 1.6, moored: true, waiting: false })
+    obst.push({ zE: zb, off: -halfW(zb) + 0.3 + 176, hz: 1.6, hx: 1.6, moored: true, waiting: false })
+  }
+  obst.push(...bridge.obstacles())
   const yawAt = (z, flip) => Math.atan2(2, riverX(z - 1) - riverX(z + 1)) + (flip ? Math.PI : 0)
   function place(g, { z, off, scale = 1, drift = 0, flip = false, bob = 0.1, yaw = 0, speed = 0, slow = 0, spawnZ = -575 }) {
     const holder = new THREE.Group()
@@ -490,7 +576,14 @@ export function createScene(canvas, { low = false } = {}) {
     holder.position.set(riverX(z) + off, 0, z)
     holder.rotation.y = yawAt(z, flip) + yaw
     scene.add(holder)
-    boats.push({ h: holder, g, wk, z, off, drift, flip, bob, yaw, speed, slow, spawnZ, phase: Math.random() * 6, prevYaw: holder.rotation.y, waiting: false })
+    const hz = (g.userData.L * scale) / 2
+    const hx = (g.userData.B * scale) / 2 + hz * Math.abs(Math.sin(yaw)) * 0.9
+    boats.push({
+      h: holder, g, wk, z, zE: z, off, off0: off, drift, flip, bob, yaw, speed, slow, spawnZ, hz, hx,
+      moored: !speed && !drift && !slow,
+      zEnd: g.userData.kind === 'boat' ? -496 : -565,
+      phase: Math.random() * 6, prevYaw: holder.rotation.y, waiting: false,
+    })
   }
   ;[
     [-116, -84], [-134, -62], [-150, -30], [-178, -92], [-224, -70], [-262, -46], [-420, -80],
@@ -504,9 +597,60 @@ export function createScene(canvas, { low = false } = {}) {
   /* بارجة بقاطرة في المسار الأيسر تصعد النهر قبل منطقة الميناء */
   place(makeBargeTug(), { z: -300, off: -48, flip: true, speed: 1.9, bob: 0.06, spawnZ: -362 })
 
+  /* تمثال السيّاب على الكورنيش */
+  createStatuePlaza(scene, { riverX, halfW, renderer, low })
+
+  {
+    const sg = makeGateSign(14)
+    const zz = SIGN.z
+    const dx = riverX(zz - 1) - riverX(zz + 1)
+    const l = Math.hypot(dx, 2)
+    const fx = dx / l
+    const fz = -2 / l
+    const rx = -fz
+    const rz = fx
+    const x = riverX(zz) - halfW(zz) + 0.3 + rx * SIGN.q
+    const z = zz + rz * SIGN.q
+    sg.position.set(x, Math.max(terrainH(x, z), 0.2) - 0.5, z)
+    sg.rotation.y = Math.atan2(-rz, rx)
+    scene.add(sg)
+  }
+
   /* ميناء أم قصر */
-  const port = createPort(scene, { riverX, halfW, low })
-  place(makeContainerShip(), { z: -402, off: port.berth(-402, 4.6), bob: 0.04 })
+  const plantPalms = (list) => {
+    const dm = new THREE.Object3D()
+    const groups = variants.map(() => [])
+    list.forEach((it, i) => {
+      dm.position.set(it.x, it.y, it.z)
+      dm.rotation.set(0, i * 1.7, 0)
+      dm.scale.setScalar(it.s)
+      dm.updateMatrix()
+      groups[i % variants.length].push(dm.matrix.clone())
+    })
+    variants.forEach((v, i) => {
+      const mlist = groups[i]
+      if (!mlist.length) return
+      ;[
+        [v.trunk, trunkMat],
+        [v.fronds, frondMat],
+        [v.dates, dateMat],
+      ].forEach(([geo, mat]) => {
+        const im = new THREE.InstancedMesh(geo, mat, mlist.length)
+        mlist.forEach((m, j) => im.setMatrixAt(j, m))
+        im.frustumCulled = false
+        scene.add(im)
+      })
+    })
+  }
+  const port = createPort(scene, { riverX, halfW, low, plantPalms })
+  const corn = createCorniche(scene, { riverX, halfW, terrainH, low, plantPalms })
+  obst.push(...corn.obstacles())
+  const oil = createOilField(scene, { riverX, halfW, terrainH, low })
+  obst.push(...oil.obstacles())
+  const stad = createStadium(scene, { riverX, halfW, terrainH, low, plantPalms })
+  const cship = makeContainerShip()
+  place(cship, { z: -402, off: port.berth(-402, 4.6), bob: 0.04 })
+  port.attachShip(cship)
   place(makeTanker(), { z: -472, off: port.berth(-472, 3.9), scale: 0.9, bob: 0.04 })
 
   /* بيوت الشناشيل والمسجد */
@@ -551,20 +695,6 @@ export function createScene(canvas, { low = false } = {}) {
   cap.position.set(mx + 8, terrainH(mx, -486) + 25.5, -486)
   scene.add(cap)
 
-  /* غبار ذهبي */
-  const pc = low ? 300 : 700
-  const pp = new Float32Array(pc * 3)
-  const r3 = rng(99)
-  for (let i = 0; i < pc; i++) {
-    const z = -r3() * RIVER_LEN
-    pp[i * 3] = leftBank(z) + r3() * 110
-    pp[i * 3 + 1] = r3() * 38
-    pp[i * 3 + 2] = z
-  }
-  const pg = new THREE.BufferGeometry()
-  pg.setAttribute('position', new THREE.BufferAttribute(pp, 3))
-  const motes = new THREE.Points(pg, new THREE.PointsMaterial({ color: 0xfffaf0, size: 3, sizeAttenuation: false, transparent: true, opacity: 0.8, depthWrite: false }))
-  scene.add(motes)
 
   /* مراقب الجودة: يخفّف المشهد تلقائياً على الأجهزة الضعيفة كي لا يتجمّد الموقع */
   let quality = 0
@@ -598,6 +728,13 @@ export function createScene(canvas, { low = false } = {}) {
   /* التحكّم */
   let target = 0
   let current = 0
+  let mid2 = 0
+  let nightT = 0
+  let night = 0
+  let tiltT = 0
+  let tilt = 0
+  const dayFog = new THREE.Color(SKY_HAZE)
+  const nightFog = new THREE.Color(0x0b1230)
   let mx2 = 0
   let my2 = 0
   let tmx = 0
@@ -648,7 +785,10 @@ export function createScene(canvas, { low = false } = {}) {
         accN = 0
       }
     }
-    current += (target - current) * (reduce ? 1 : 0.055)
+    /* تنعيم مستقل عن معدّل الإطارات بمرحلتين فيخرج الإيقاف والانطلاق ناعمَين */
+    const sdt = Math.min(0.1, Math.max(0.001, dtm / 1000))
+    mid2 += (target - mid2) * (reduce ? 1 : 1 - Math.exp(-sdt * 5))
+    current += (mid2 - current) * (reduce ? 1 : 1 - Math.exp(-sdt * 3.2))
     mx2 += (tmx - mx2) * 0.05
     my2 += (tmy - my2) * 0.05
 
@@ -656,7 +796,24 @@ export function createScene(canvas, { low = false } = {}) {
     camera.position.set(leftBank(cz) + camU(current) + mx2 * 2.5, camY(current) - my2 * 1.0, cz)
     const lzz = lokZ(current)
     look.set(leftBank(lzz) + lokU(current) + mx2 * 1.2, lokY(current), lzz)
+    /* ليل البصرة: تغرب الشمس وتظهر النجوم، وتميل الكاميرا نحو السماء */
+    night += (nightT - night) * (1 - Math.exp(-sdt * 4))
+    tilt += (tiltT - tilt) * (1 - Math.exp(-sdt * 3))
+    look.y += tilt * 1500
+    if (night > 0.002 || sky.material.uniforms.uNight.value > 0.002) {
+      const nn = Math.min(1, night)
+      sky.material.uniforms.uNight.value = nn
+      hemi.intensity = 1.1 * (1 - 0.82 * nn)
+      sun.intensity = 2.0 * (1 - 0.92 * nn)
+      scene.fog.color.copy(dayFog).lerp(nightFog, nn)
+      scene.background.copy(scene.fog.color)
+      waterMat.uniforms.uFogColor.value.set(scene.fog.color.r, scene.fog.color.g, scene.fog.color.b)
+      waterMat.uniforms.uDim.value = 1 - 0.88 * nn
+      seaMat.uniforms.uHaze.value.set(scene.fog.color.r, scene.fog.color.g, scene.fog.color.b)
+      seaMat.uniforms.uDim.value = 1 - 0.88 * nn
+    }
     camera.lookAt(look)
+    sky.position.copy(camera.position)
     camera.rotateZ((rollT(current) * Math.PI) / 180 - mx2 * 0.012)
     const fv = fovT(current) * fovMul
     if (Math.abs(fv - lastFov) > 0.02) {
@@ -673,14 +830,16 @@ export function createScene(canvas, { low = false } = {}) {
 
     if (!reduce) {
       waterMat.uniforms.uTime.value = time
+      seaMat.uniforms.uTime.value = time
+      sky.material.uniforms.uTime.value = time
       uTime.value = time
       shipUniforms.uTime.value = time
       const dt = Math.min(0.05, dtm / 1000)
       boats.forEach((b, i) => {
         if (b.speed) {
           if (!b.waiting) b.z += b.speed * dt
-          if (b.speed < 0 && b.z < -565) b.z = 72
-          if (b.speed > 0 && b.z > 72) {
+          if (b.speed < 0 && b.z < b.zEnd) b.z = 255
+          if (b.speed > 0 && b.z > 255) {
             b.waiting = true
             b.h.visible = false
           }
@@ -690,8 +849,39 @@ export function createScene(canvas, { low = false } = {}) {
             b.h.visible = true
           }
         }
+      })
+      boats.forEach((b, i) => {
+        b.zE = b.z + (b.drift ? Math.sin(time * 0.15 + i) * b.drift : 0)
+      })
+      /* تفادي التصادم: لا تدخل سفينة أو قارب في آخر، ولا في الأرصفة الراسية ولا في رصيف المنارة */
+      const conflict = (a, i, offX) => {
+        let push = 0
+        const test = (o, factor) => {
+          const dzAbs = Math.abs(a.zE - o.zE)
+          if (dzAbs >= a.hz + o.hz + 8) return
+          const doff = offX - o.off
+          const need = a.hx + o.hx + 4 - Math.abs(doff)
+          if (need <= 0) return
+          const dir = o.moored && o.off < -60 ? 1 : Math.abs(doff) < 0.6 ? (i % 2 ? 1 : -1) : Math.sign(doff)
+          push += dir * need * factor
+        }
+        boats.forEach((o, j) => {
+          if (j !== i && !o.waiting && o.h.visible) test(o, o.moored ? 1 : 0.55)
+        })
+        obst.forEach((o) => test(o, 1))
+        return push
+      }
+      boats.forEach((a, i) => {
+        if (a.moored || a.waiting) return
+        const push = conflict(a, i, a.off)
+        if (push !== 0) a.off += Math.max(-9 * dt, Math.min(9 * dt, push * 2.2 * dt))
+        else if (Math.abs(a.off - a.off0) > 0.05 && conflict(a, i, a.off0) === 0) a.off += (a.off0 - a.off) * Math.min(1, 0.35 * dt)
+        const lim = halfW(a.zE) - a.hx - 7
+        a.off = Math.max(-lim, Math.min(lim, a.off))
+      })
+      boats.forEach((b, i) => {
         if (b.waiting) return
-        const z = b.z + (b.drift ? Math.sin(time * 0.15 + i) * b.drift : 0)
+        const z = b.zE
         const lat = b.off + Math.sin(time * 0.21 + b.phase) * (b.speed ? 0.5 : 0.15)
         b.h.position.set(riverX(z) + lat, Math.sin(time * 1.4 + b.phase) * b.bob, z)
         const yw = yawAt(z, b.flip) + b.yaw
@@ -706,7 +896,10 @@ export function createScene(canvas, { low = false } = {}) {
         animateVessel(b.g, time, b.phase, spd)
       })
       port.update(time, dt)
-      motes.rotation.y = Math.sin(time * 0.05) * 0.02
+      bridge.update(time, dt)
+      corn.update(time, dt)
+      oil.update(time)
+      stad.update(time)
     } else {
     }
     renderer.render(scene, camera)
@@ -716,6 +909,12 @@ export function createScene(canvas, { low = false } = {}) {
   return {
     setProgress(p) {
       target = p
+    },
+    setNight(n) {
+      nightT = n
+    },
+    setTilt(t) {
+      tiltT = t
     },
     dispose() {
       cancelAnimationFrame(raf)

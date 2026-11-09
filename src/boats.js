@@ -354,8 +354,8 @@ const WAKE_FS = `
     float a = foam * fade * clamp(uSpeed, 0.0, 1.0) * 0.9;
     vec3 col = vec3(0.97, 0.98, 0.95);
     float d = length(vW - cameraPosition);
-    col = mix(col, vec3(0.969, 0.941, 0.886), smoothstep(110.0, 440.0, d));
-    a *= 1.0 - smoothstep(180.0, 420.0, d);
+    col = mix(col, vec3(0.66, 0.82, 0.96), smoothstep(260.0, 900.0, d));
+    a *= 1.0 - smoothstep(380.0, 800.0, d);
     gl_FragColor = vec4(col, a);
   }`
 function wakeGeo(x0, len, w0, spread, rows = 44, cols = 16) {
@@ -646,10 +646,19 @@ export function makeContainerShip() {
   })
   im.castShadow = true
   g.add(im)
+  const slotMats = items.map((it) => new THREE.Matrix4().makeTranslation(it[0], it[1] - 0.2, it[2]))
+  const hideMat = new THREE.Matrix4().makeScale(0, 0, 0)
+  const cargo = {
+    items,
+    setSlot(i, vis) {
+      im.setMatrixAt(i, vis ? slotMats[i] : hideMat)
+      im.instanceMatrix.needsUpdate = true
+    },
+  }
   namePlate(g, 'SINDBAD LINE', L * 0.2, 4.4, B / 2, 15, 1.9, '#f4f0e4')
   flag(g, -L / 2 + 1.2, dy + 0.1, 0, 1.2)
   const sm = smoke(g, -L / 2 + 4.2, dy + 15, 2.2, 1.1)
-  g.userData = { draft: 3.4, L, B, smoke: sm, radar: rd, kind: 'ship' }
+  g.userData = { draft: 3.4, L, B, smoke: sm, radar: rd, kind: 'ship', cargo }
   return g
 }
 

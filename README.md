@@ -26,7 +26,7 @@ Real-time WebGL river, hand-built palms, ships, a working container port — all
 
 A single-page website about **Basra, Iraq** that treats the page itself as a film. You scroll — the camera flies.
 
-It starts high above the **Shatt al-Arab**, drops onto the water, swings across the river, **orbits a palm island**, slips between *mashoof* canoes and sailing dhows, and ends in a sweeping aerial over **Umm Qasr port** — with Arabic signage, working cranes and container ships. Below the journey, the site continues as a modern Arabic magazine: destinations, 13 centuries of history, people, food, news.
+It starts high above the **Shatt al-Arab**, drops onto the water, swings across the river, **sweeps along the palm-lined bank**, slips between *mashoof* canoes and sailing dhows, and ends in a sweeping aerial over **Umm Qasr port** — with Arabic signage, working cranes and container ships. Below the journey, the site continues as a modern Arabic magazine: destinations, 13 centuries of history, people, food, news.
 
 > **Palette** — warm white `#FFFFFF` · Basra sand `#BF9E66` · date-palm ink `#2A1F12`
 > **Patterns** — Basra *shanasheel* lattice, palm-frond weave, river-scale waves, mashrabiya diamonds — all drawn as filled shapes.
@@ -37,12 +37,13 @@ It starts high above the **Shatt al-Arab**, drops onto the water, swings across 
 
 | | |
 |---|---|
-| 🎥 **Cinematic camera** | A Hermite-spline path with banking, FOV changes, an orbit around the island and a crane-style finish. Captions hop left/right to follow where the camera looks. |
+| 🎥 **Cinematic camera** | A Hermite-spline path with banking, FOV changes, a sweep along the palm bank and a crane-style finish. Captions hop left/right to follow where the camera looks. |
 | 🌊 **Real-looking water** | Custom GLSL shader: Fresnel sky reflection, animated micro-waves, sun glitter, shallow-to-deep colour, shoreline foam, atmospheric fog. |
 | 🌴 **Procedural date palms** | Four trunk variants with ring scars, pinnate fronds (hundreds of leaflets), dry lower fronds, hanging date bunches, wind sway and real-time shadows. |
 | 🚢 **Ships that move** | Cargo ship, container ship, tanker, barge + tug, dhows and *mashoof* — each with hull plating, rust streaks, railings, lifeboats, rotating radar, an Iraqi flag in the wind, funnel smoke, bow waves and foam wakes. |
-| 🏗️ **Umm Qasr port** | Quay, ship-to-shore cranes that actually lift containers, RTG yard cranes, ~1,500 containers, trucks on the move, curved warehouses, control tower and **Arabic signs** ("ميناء أم قصر"). |
-| 🏝️ **Palm island** | A small island in mid-river, planted with 70 palms and thousands of grass blades. |
+| 🏗️ **Umm Qasr port** (now with a grain-silo complex, white oil tanks, a red-and-white lighthouse jetty with a pulsing lamp, flashing navigation buoys, flags, hazard-striped quay, crane rails, berth numbers in Arabic, reach stackers and landscaping) | Quay, ship-to-shore cranes that actually lift containers, RTG yard cranes, ~1,500 containers, trucks on the move, curved warehouses, control tower and **Arabic signs** ("ميناء أم قصر"). |
+| 🗿 **Sayyab statue** | The real Badr Shakir al-Sayyab statue — cut out from the Corniche photograph and inflated into 3D from its own silhouette — on a veined-marble pedestal with an Arabic plaque, on a paved Corniche plaza with green railings, twin-globe lamps and a little book kiosk. The camera sweeps in low to frame it. |
+| 🌉 **The Italian Bridge** | Muhammad Baqir Al-Sadr Bridge — a cable-stayed span over the Shatt al-Arab with two 40 m towers, steel struts and fan cables, composite box-girder deck, approach viaducts on circular piers, lamp posts and traffic in both directions. The journey opens flying over it. (Lengths scaled ×0.7 to fit the river.) |
 | 🧭 **Live Basra clock** | Real local time and sunset/sunrise countdown for 30.5°N 47.8°E — computed on the client. |
 | 🎠 **3D scroll sections** | Horizontal 3D gallery of destinations, stacked history cards, a rotating 3D ring of notable Basrans, tilt-on-hover cards. |
 | ⚙️ **Adaptive quality** | Detects weak GPUs and frame-time drops, then removes shadows, resolution, grass and palms step by step so the page never freezes. |
@@ -92,7 +93,11 @@ Basra/
    ├─ scene.js             The 3D world: terrain, river shader, camera track, quality governor
    ├─ palm.js              Procedural palms, reeds, grass blades, wind-sway material
    ├─ boats.js             Mashoof, dhow, tanker, container/cargo ships, barge + tug, wakes, smoke
-   └─ port.js              Umm Qasr port: quay, cranes, containers, trucks, Arabic signs
+   ├─ bridge.js            The Italian Bridge (Muhammad Baqir Al-Sadr Bridge)
+   ├─ port.js              Umm Qasr port: quay, cranes, containers, trucks, Arabic signs
+   └─ statue.js            Badr Shakir al-Sayyab statue + Corniche plaza
+
+tools/make_statue_cutout.py   Builds the statue cut-out + depth map from the photo (Python, Pillow/NumPy/SciPy)
 ```
 
 ---
@@ -104,7 +109,7 @@ Basra/
 | Change captions, history, people, news | `src/data.js` |
 | Re-time or re-aim the camera | `WAYPOINTS` in `src/scene.js` — `[progress, [u,y,z] camera, [u,y,z] look-at, fov, roll]` |
 | Change which side a caption appears on | `side: 'sl' \| 'sr'` per chapter in `src/data.js` |
-| Make the river wider or move the island | `halfW` and `ISL` in `src/scene.js` |
+| Make the river wider or narrower | `halfW` in `src/scene.js` |
 | Change palm density / ship lanes | the `palmCount` constants and `place(...)` calls in `src/scene.js` |
 | Re-colour the site | CSS variables at the top of `src/styles.css` and colours in `src/patterns.js` |
 | Edit port signs | `signTexture(...)` calls in `src/port.js` |
@@ -140,7 +145,7 @@ All photographs are from **Wikimedia Commons** under open licences. The full mac
 | Port crane & bridge | Naseem95yak | CC BY-SA 4.0 |
 | Basra Corniche | Lordali91 | CC BY-SA 3.0 |
 | Southern Iraq marshes | Montzr 1 | CC BY-SA 4.0 |
-| Statue of Badr Shakir al-Sayyab | David Stanley | CC BY 2.0 |
+| Statue of Badr Shakir al-Sayyab (also the source of the 3D statue cut-out, adapted) | David Stanley | CC BY 2.0 |
 | Shatt al-Arab & Sindbad Island | Aziz1005 | Public domain |
 | Mashoof | Sgt. Gustavo Olgiati | Public domain |
 | Basra, 1915 | Unknown | Public domain |
