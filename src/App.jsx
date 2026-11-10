@@ -739,11 +739,11 @@ function Culture() {
 
 const NIMG = ['port.jpg', 'stadium-real.jpg', 't-dates.jpg', 'marshes.jpg', 'mirbad-old.jpg']
 function News() {
+  const [hv, setHv] = useState(0)
   return (
     <section className="sec news" id="news">
       <div className="nw-bg" aria-hidden="true">
-        <i className="nw-photo" style={{ backgroundImage: "url(./assets/port.jpg)" }} />
-        <i className="nw-dust" />
+        {NIMG.map((im, i) => (<i key={im} className={'nw-cine' + (hv === i ? ' on' : '')} style={{ backgroundImage: `url(./assets/${im})` }} />))}
       </div>
       <div className="wrap">
         <div className="nw-head">
@@ -752,7 +752,7 @@ function News() {
         </div>
         <div className="nw-grid">
           {news.map((n, i) => (
-            <article key={n.title} className={'nw-card nw-' + i + ' rv'} style={{ '--d': `${i * 90}ms` }}>
+            <article key={n.title} className={'nw-card nw-' + i + ' rv'} onMouseEnter={() => setHv(i)} onFocus={() => setHv(i)} tabIndex={0} style={{ '--d': `${i * 90}ms` }}>
               <img src={'./assets/' + NIMG[i]} alt="" loading="lazy" draggable="false" />
               <div className="nw-top">
                 <span className="nw-tag">{n.tag}</span>

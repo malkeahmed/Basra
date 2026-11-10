@@ -2127,3 +2127,15 @@ body.lowfx .ftn-bar nav a { backdrop-filter: none; -webkit-backdrop-filter: none
 .pp-bgi { inset: -4%; background-size: cover; background-position: center 30%; filter: saturate(1.05) brightness(.9) !important; opacity: 0; transform: scale(1.08); transition: opacity 1.1s ease, transform 8s cubic-bezier(.22, 1, .36, 1); }
 .pp-bgi.on { opacity: 1 !important; transform: scale(1.02); }
 .pp-bg::after { opacity: 1 !important; background: linear-gradient(180deg, rgba(0, 0, 0, .82) 0%, rgba(0, 0, 0, .3) 34%, rgba(0, 0, 0, .38) 62%, rgba(0, 0, 0, .9) 100%), radial-gradient(ellipse 75% 70% at 50% 50%, transparent 35%, rgba(0, 0, 0, .65) 100%) !important; }
+
+/* ===== خلفية الأخبار: صورة الخبر الذي تمرّ عليه تملأ القسم بأسلوب سينمائي ===== */
+.news, .sec.news { background: #050505 !important; }
+.news > .nw-bg { background: #050505 !important; }
+.news > .nw-bg::before { display: none !important; }
+.nw-cine { position: absolute; inset: -4%; background-size: cover; background-position: center; opacity: 0; transform: scale(1.08); filter: saturate(1.08) brightness(.85); transition: opacity 1.1s ease, transform 9s cubic-bezier(.22, 1, .36, 1); }
+.nw-cine.on { opacity: 1; transform: scale(1.02); }
+.news > .nw-bg::after { z-index: 1; filter: none !important; background: linear-gradient(180deg, rgba(0, 0, 0, .85) 0%, rgba(0, 0, 0, .45) 30%, rgba(0, 0, 0, .55) 70%, rgba(0, 0, 0, .92) 100%), radial-gradient(ellipse 80% 70% at 50% 50%, transparent 35%, rgba(0, 0, 0, .6) 100%) !important; }
+.news .nw-head p { color: #e2c27c; }
+.news .nw-head i { background: #e2c27c; }
+.news .nw-head .h2 { color: #fff; text-shadow: 0 6px 40px rgba(0, 0, 0, .5); }
+.news .nw-card { cursor: pointer; }
