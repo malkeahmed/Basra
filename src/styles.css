@@ -2045,3 +2045,7 @@ body.lowfx .ftn-bar nav a { backdrop-filter: none; -webkit-backdrop-filter: none
 .ftd-bot a { color: #2a1f12; }
 .ftd-bot .ft-made, .ftd-bot .ft-dj, .ftd-bot p { color: #2a1f12 !important; opacity: .85; }
 .zt-fin, .zt-fin > * { transform: none !important; }
+
+/* عناوين بطاقات الذوق العمودية: تبدأ من أسفل البطاقة وتصعد نحو الأعلى */
+.cu-v { text-align: end; max-height: calc(100% - 52px); overflow: hidden; }
+@media (max-width: 800px) { .cu-v { text-align: start; max-height: none; overflow: visible; } }
