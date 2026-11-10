@@ -672,6 +672,15 @@ function People() {
             <div key={p.ar} className={'pp-bgi' + (front === i ? ' on' : '')} style={PIMG[i] ? { backgroundImage: `url(./assets/${PIMG[i]})` } : undefined} />
           ))}
         </div>
+        <div className="pp-aura" aria-hidden="true"><i /><i /><i /></div>
+        <svg className="pp-orbits" viewBox="0 0 1600 560" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+          <ellipse className="po po1" cx="800" cy="280" rx="760" ry="230" />
+          <ellipse className="po po2" cx="800" cy="280" rx="610" ry="180" />
+          <ellipse className="po po3" cx="800" cy="280" rx="470" ry="135" />
+          <circle className="po-dot" r="4"><animateMotion dur="18s" repeatCount="indefinite" path="M40 280 a760 230 0 1 0 1520 0 a760 230 0 1 0 -1520 0" /></circle>
+          <circle className="po-dot" r="3"><animateMotion dur="13s" repeatCount="indefinite" path="M1410 280 a610 180 0 1 0 -1220 0 a610 180 0 1 0 1220 0" /></circle>
+          <circle className="po-dot" r="2.5"><animateMotion dur="10s" repeatCount="indefinite" path="M330 280 a470 135 0 1 0 940 0 a470 135 0 1 0 -940 0" /></circle>
+        </svg>
         <div className="pp-spot" aria-hidden="true" />
         <div className="pp-head">
           <p><b>٠٦</b><i />أعلام</p>

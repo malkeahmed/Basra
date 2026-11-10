@@ -2049,3 +2049,81 @@ body.lowfx .ftn-bar nav a { backdrop-filter: none; -webkit-backdrop-filter: none
 /* عناوين بطاقات الذوق العمودية: تبدأ من أسفل البطاقة وتصعد نحو الأعلى */
 .cu-v { text-align: end; max-height: calc(100% - 52px); overflow: hidden; }
 @media (max-width: 800px) { .cu-v { text-align: start; max-height: none; overflow: visible; } }
+
+/* مسافات أقلّ بين الأقسام */
+.sec { padding-block: clamp(44px, 6vw, 96px); }
+.st { margin-top: clamp(16px, 3vh, 40px); }
+.sec .td-head, .cu-head, .nw-head { margin-bottom: clamp(24px, 4.5vh, 52px); }
+
+/* ===== ألوان الأقسام بالتناوب: رمادي فاتح ← ليل الفيروز الذهبي ← رمادي ... ===== */
+:root { --gray-a: #eceff3; --gray-b: #dde1e7; }
+.intro, .sec.intro, #about { background: linear-gradient(180deg, var(--gray-a), var(--gray-b)) !important; }
+.history, .sec.history { background: linear-gradient(180deg, var(--gray-b), var(--gray-a) 60%, var(--gray-b)) !important; }
+.culture, .sec.culture { background: linear-gradient(180deg, var(--gray-a), var(--gray-b)) !important; background-image: none !important; }
+
+.places-stage, .places-stage[style], .people-stage, .people-stage[style], .news, .sec.news {
+  background:
+    radial-gradient(ellipse 60% 50% at 12% 0%, rgba(214, 170, 84, .26), transparent 60%),
+    radial-gradient(ellipse 55% 55% at 92% 100%, rgba(32, 150, 160, .34), transparent 62%),
+    radial-gradient(ellipse 40% 40% at 70% 20%, rgba(120, 90, 200, .14), transparent 70%),
+    linear-gradient(160deg, #0b3138 0%, #0a1d2e 55%, #060f18 100%) !important;
+}
+.news > .nw-bg { background: none !important; }
+.news > .nw-bg::before { background-image: linear-gradient(rgba(255, 255, 255, .045) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, .045) 1px, transparent 1px) !important; background-size: 64px 64px; mask-image: radial-gradient(ellipse 75% 65% at 50% 35%, #000, transparent 80%); -webkit-mask-image: radial-gradient(ellipse 75% 65% at 50% 35%, #000, transparent 80%); }
+.news > .nw-bg::after { background: radial-gradient(circle at 78% 18%, rgba(240, 217, 154, .14), transparent 28%) !important; filter: blur(30px); }
+.nw-photo { display: none !important; }
+.nw-dust { display: block !important; opacity: .7; }
+.news .nw-head p { color: #e2c27c; }
+.news .nw-head i { background: #e2c27c; }
+.news .nw-head .h2 { color: #fff; }
+.news .nw-card { box-shadow: 0 40px 70px -30px rgba(0, 0, 0, .7), 0 0 0 1px rgba(255, 255, 255, .1); }
+/* خلفيات الصور المموّهة في الوجهات والأعلام أخفّ حتى يظهر اللون الجديد */
+.pl-bg, .pp-bg { opacity: .55; }
+
+.pl-bg, .pp-bg { opacity: .35; }
+.pp-bg::after { opacity: .5; }
+.places-stage::before, .people-stage::before { display: none; }
+
+/* خلفية التذييل طوسية فاتحة */
+.ftd-root { background: linear-gradient(180deg, #e9ecf0, #d9dee4) !important; }
+.ftd-bg { background: radial-gradient(ellipse 60% 50% at 20% 10%, rgba(255, 255, 255, .85), transparent 65%), linear-gradient(180deg, #e9ecf0, #d9dee4); }
+.ftd-arch { box-shadow: 0 0 0 2px #bf9e66, 0 0 0 14px #e3e7ec, 0 0 0 15.5px rgba(191, 158, 102, .7), 0 50px 80px -34px rgba(20, 30, 50, .45); }
+
+/* نصوص بوابة الدخول بلون الذهب نفسه */
+.gate .gx-c, .gate .gx-c.br, .gate .gx-cue, .gate .gx-cue span, .gate .gate-t { color: #e2c27c; }
+.gate .gx-cue i::after { background: #e2c27c; }
+.gate .gx-en { color: #e2c27c; }
+
+/* مسافة بين عنوان الأعلام والبطاقات */
+.pp-head { margin-bottom: clamp(18px, 4.4vh, 52px); }
+.ring-view { height: clamp(300px, 44vh, 450px); margin-top: clamp(6px, 1.6vh, 20px); }
+
+/* ===== خلفية الأعلام: مسرح مداري — هالة ملوّنة تتحرّك، ومدارات ذهبية حول البطاقات الدوّارة ===== */
+.people-stage, .people-stage[style] { background: radial-gradient(ellipse 70% 60% at 50% 45%, #12404a 0%, #0a2230 45%, #050c14 100%) !important; }
+.pp-bg { opacity: .28; mix-blend-mode: luminosity; }
+.pp-aura { position: absolute !important; inset: 0; z-index: 0 !important; overflow: hidden; pointer-events: none; }
+.pp-aura i { position: absolute; border-radius: 50%; filter: blur(90px); opacity: .55; animation: pp-drift 18s ease-in-out infinite alternate; }
+.pp-aura i:nth-child(1) { width: 46vw; height: 46vw; left: -10vw; top: -12vw; background: #1aa39a; }
+.pp-aura i:nth-child(2) { width: 40vw; height: 40vw; right: -8vw; bottom: -14vw; background: #d99a3e; opacity: .42; animation-delay: -6s; }
+.pp-aura i:nth-child(3) { width: 30vw; height: 30vw; left: 38vw; top: 30%; background: #5b4bc4; opacity: .22; animation-delay: -11s; }
+@keyframes pp-drift { to { transform: translate(6vw, 4vh) scale(1.12); } }
+.pp-orbits { position: absolute !important; z-index: 1 !important; left: 50%; top: 50%; width: min(118vw, 1700px); height: auto; translate: -50% -46%; pointer-events: none; overflow: visible; }
+.po { fill: none; stroke-width: 1.2; vector-effect: non-scaling-stroke; }
+.po1 { stroke: rgba(255, 217, 138, .28); }
+.po2 { stroke: rgba(255, 255, 255, .16); stroke-dasharray: 2 10; animation: po-run 40s linear infinite; }
+.po3 { stroke: rgba(255, 217, 138, .22); }
+@keyframes po-run { to { stroke-dashoffset: -480; } }
+.po-dot { fill: #ffe2a0; filter: drop-shadow(0 0 8px rgba(255, 200, 110, .95)); }
+.people-stage::after { content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: .07; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+.pp-spot { opacity: .55; }
+@media (prefers-reduced-motion: reduce) { .pp-aura i, .po2 { animation: none; } .po-dot { display: none; } }
+@media (max-width: 800px) { .pp-orbits { width: 170vw; } }
+
+/* ===== خلفية الأعلام: صورة الشخصية الحالية تملأ القسم بأسلوب سينمائي ===== */
+.people-stage, .people-stage[style] { background: #050505 !important; }
+.pp-aura, .pp-orbits, .pp-spot, .pp-floor { display: none !important; }
+.people-stage::after { display: none; }
+.pp-bg { opacity: 1 !important; mix-blend-mode: normal !important; }
+.pp-bgi { inset: -4%; background-size: cover; background-position: center 30%; filter: saturate(1.05) brightness(.9) !important; opacity: 0; transform: scale(1.08); transition: opacity 1.1s ease, transform 8s cubic-bezier(.22, 1, .36, 1); }
+.pp-bgi.on { opacity: 1 !important; transform: scale(1.02); }
+.pp-bg::after { opacity: 1 !important; background: linear-gradient(180deg, rgba(0, 0, 0, .82) 0%, rgba(0, 0, 0, .3) 34%, rgba(0, 0, 0, .38) 62%, rgba(0, 0, 0, .9) 100%), radial-gradient(ellipse 75% 70% at 50% 50%, transparent 35%, rgba(0, 0, 0, .65) 100%) !important; }
