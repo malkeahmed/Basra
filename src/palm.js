@@ -25,7 +25,7 @@ function paint(geo, fn) {
 }
 
 function makeTrunk(H, bend, r) {
-  const g = new THREE.CylinderGeometry(0.2, 0.34, H, 14, 46, true)
+  const g = new THREE.CylinderGeometry(0.2, 0.34, H, 8, 18, true)
   g.translate(0, H / 2, 0)
   const p = g.attributes.position
   for (let i = 0; i < p.count; i++) {
@@ -74,7 +74,7 @@ function makeFrond(len, lift, drop, dry, rand) {
   const dryTip = [0.62, 0.52, 0.3]
   const mixc = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t]
 
-  const N = 22
+  const N = 14
   for (let i = 0; i < N; i++) {
     const t = 0.1 + (i / (N - 1)) * 0.88
     const P = rach(t)
@@ -83,7 +83,7 @@ function makeFrond(len, lift, drop, dry, rand) {
     const ll = len * 0.3 * Math.pow(Math.sin(Math.PI * Math.pow(t, 0.75)), 0.65) * (1 - 0.35 * t) * (0.85 + rand() * 0.3)
     for (const s of [-1, 1]) {
       const dir = new THREE.Vector3(0, 0, s).multiplyScalar(1).add(tan.clone().multiplyScalar(0.62)).add(new THREE.Vector3(0, -0.5 - t * 0.3, 0)).normalize()
-      const w = 0.045 + ll * 0.045
+      const w = (0.045 + ll * 0.045) * 1.4
       const a = P.clone().addScaledVector(tan, -w)
       const b = P.clone().addScaledVector(tan, w)
       const mid = P.clone().addScaledVector(dir, ll * 0.5).add(new THREE.Vector3(0, ll * 0.1, 0))
@@ -127,7 +127,7 @@ function makeCrown(H, bend, seed) {
   const cx = bend * H
   const cz = bend * 0.4 * H
   const parts = []
-  const nF = 14
+  const nF = 11
   for (let k = 0; k < nF; k++) {
     const u = k / (nF - 1)
     const theta = k * 2.399963 + rand() * 0.3
@@ -152,7 +152,7 @@ function makeDates(H, bend, seed) {
     const a = rand() * Math.PI * 2
     const bx = cx + Math.cos(a) * 0.9
     const bz = cz + Math.sin(a) * 0.9
-    for (let i = 0; i < 16; i++) {
+    for (let i = 0; i < 6; i++) {
       const s = new THREE.IcosahedronGeometry(0.11 + rand() * 0.05, 0)
       s.scale(1, 1.5, 1)
       s.translate(bx + (rand() - 0.5) * 0.45, H - 0.9 - rand() * 1.1, bz + (rand() - 0.5) * 0.45)

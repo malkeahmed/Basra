@@ -159,7 +159,7 @@ function Nav() {
           {nav.map((n, i) => (
             <a key={n.href} href={n.href} className={i === on ? 'on' : ''}>
               <sup>{ar(pad(i + 1))}</sup><span>{n.label}</span>
-              <em className="nv-pv" aria-hidden="true"><img src={'./assets/' + NAVIMG[i]} alt="" /><b>{n.label}</b></em>
+              <em className="nv-pv" aria-hidden="true"><img loading="lazy" decoding="async" src={'./assets/' + NAVIMG[i]} alt="" /><b>{n.label}</b></em>
             </a>
           ))}
         </nav>
@@ -172,7 +172,7 @@ function Nav() {
     <div className={'mn' + (open ? ' open' : '')} aria-hidden={!open}>
       <div className="mn-strips" aria-hidden="true">{[0, 1, 2, 3, 4].map((k) => (<i key={k} style={{ '--k': k }} />))}</div>
       <div className="mn-imgs" aria-hidden="true">
-        {nav.map((n, i) => (<img key={n.href} className={hv === i ? 'on' : ''} src={'./assets/' + NAVIMG[i]} alt="" />))}
+        {nav.map((n, i) => (<img loading="lazy" decoding="async" key={n.href} className={hv === i ? 'on' : ''} src={'./assets/' + NAVIMG[i]} alt="" />))}
       </div>
       <div className="mn-shade" aria-hidden="true" />
       <ul className="mn-list">
@@ -220,9 +220,20 @@ function Journey() {
 
   useEffect(() => {
     let scene = null
+    let dead = false
+    let lastP = 0
     try {
       const low = window.innerWidth < 800
-      scene = createScene(canvas.current, { low })
+      /* بناء المشهد يجري على مراحل كي يظهر المدخل فوراً ولا يتجمّد المتصفّح */
+      createScene(canvas.current, { low })
+        .then((s) => {
+          if (dead) return s.dispose()
+          scene = s
+          scene.setProgress(lastP)
+          window.__basraReady = true
+          window.dispatchEvent(new Event('basra-ready'))
+        })
+        .catch(() => !dead && setFallback(true))
     } catch (e) {
       setFallback(true)
     }
@@ -243,6 +254,7 @@ function Journey() {
         L.style.setProperty('--jp', clamp(p / 0.95).toFixed(4))
         L.classList.toggle('ending', q > 0.02)
       }
+      lastP = p
       try {
         scene && scene.setProgress(p)
       } catch (e) {}
@@ -253,7 +265,7 @@ function Journey() {
       })
       chapRefs.current.forEach((el, i) => el && el.classList.toggle('on', i === active))
       dotRefs.current.forEach((d, i) => { if (!d) return; d.classList.toggle('on', i === active); d.classList.toggle('near', Math.abs(i - active) === 1) })
-    })
+    }, () => sec.current)
     const enter = () => scene && scene.startDescent && scene.startDescent()
     const back = () => scene && scene.resetDescent && scene.resetDescent()
     window.addEventListener('basra-enter', enter)
@@ -262,6 +274,7 @@ function Journey() {
       window.removeEventListener('basra-enter', enter)
       window.removeEventListener('basra-gate', back)
       unsub()
+      dead = true
       scene && scene.dispose()
     }
   }, [])
@@ -312,9 +325,10 @@ const TODAY = [
   { t: 'غروب على شطّ العرب', d: 'عند المساء يتوهّج النهر بلون الذهب، وتعبر السفن والقوارب بين النخيل والضفاف الخضراء.', img: 'sunset.jpg', c: 'شطّ العرب عند الغروب' },
   { t: 'أهوار الجنوب', d: 'ماء وقصب وقوارب خشبية في أرض نشأت فيها أولى الحضارات، وهي اليوم من مواقع التراث العالمي.', img: 'marshes.jpg', c: 'أهوار جنوب العراق' },
   { t: 'قوارب الصيّادين', d: 'زوارق خشبية ملوّنة يقودها صيّادو الشطّ، وعلى الضفاف هياكل سفن قديمة صارت مشهداً يقصده المصوّرون.', img: 'mashoof.jpg', c: 'قارب صيد عند مصبّ شطّ العرب' },
+  { t: 'شجرة آدم في القرنة', d: 'عند ملتقى دجلة والفرات في القرنة يقصد الزوّار شجرة عتيقة تنسبها الروايات الشعبية إلى جنّة آدم، ويقفون حيث يبدأ شطّ العرب.', img: 'qurna-adam-tree.jpg', c: 'شجرة آدم في القرنة' },
 ]
 const HIMG = ['imam-ali-basra.jpg', 'era-camel.jpg', 'era-jahiz.jpg', 'era-ship.jpg', 'shanasheel.jpg', 'era-1914.jpg', 'era-oil.jpg', 'stadium-outside.jpg']
-const PIMG = ['p-haytham.jpg', 'era-jahiz.jpg', null, 'p-rabia.jpg', 'sayyab.jpg']
+const PIMG = ['p-haytham.jpg', 'era-jahiz.jpg', 'p-farahidi.jpg', 'p-rabia.jpg', 'sayyab.jpg']
 const KEYS = ['دجلة', 'الفرات', 'شطّ', 'العرب', 'البصرة', 'بوّابة', 'النخيل']
 const SCRUB = 'يلتقي دجلة والفرات في القرنة فيصنعان شطّ العرب، النهر الذي يسقي النخيل ويحمل السفن إلى الخليج، وجعل من البصرة بوّابة العراق إلى العالم منذ أكثر من ألف عام.'.split(' ')
 
@@ -385,7 +399,7 @@ function Intro() {
         })
         dots.current.forEach((el, i) => el && el.classList.toggle('on', Math.floor(Math.min(p * N, N - 0.001)) === i))
       }
-    })
+    }, () => document.getElementById('about'))
     return unsub
   }, [])
 
@@ -404,7 +418,7 @@ function Intro() {
           <p className="zt-kick">الفصل الثاني</p>
           <p className="zt-hint"><i />مدينةٌ وُلدت من الماء</p>
           <div className="zt-fin">
-            <h2>مدينةٌ وُلدت<br />من الماء.</h2>
+            <h2>مدينةٌ وُلدت<br />من الماء</h2>
             <p>شطّ العرب، حيث يلتقي دجلة والفرات<br />ويمتدّ النهر نحو الخليج</p>
           </div>
         </div>
@@ -434,7 +448,7 @@ function Intro() {
             const suffix = String(st.n).replace(/[٠-٩\s]/g, '') ? ' ' + String(st.n).replace(/[٠-٩\s]/g, '') : ''
             return (
               <div key={st.t} className="st-slide" ref={(el) => (slides.current[i] = el)}>
-                <img src={'./assets/' + ST_IMG[i]} alt="" />
+                <img loading="lazy" decoding="async" src={'./assets/' + ST_IMG[i]} alt="" />
                 <div className="st-scrim" />
                 <span className="st-ghost" aria-hidden="true">{st.n}</span>
                 <p className="st-cap"><i />{ST_CAP[i]}</p>
@@ -461,7 +475,7 @@ function Intro() {
       <div className="wrap td">
         <div className="td-head">
           <p className="rv"><b>٠٣</b><i />مشاهد من البصرة</p>
-          <h3 className="rv" style={{ '--d': '80ms' }}>ثلاثة مشاهد لا تُنسى</h3>
+          <h3 className="rv" style={{ '--d': '80ms' }}>أربعة مشاهد لا تُنسى</h3>
         </div>
         <div className="td-grid">
           <div className="td-list">
@@ -532,7 +546,7 @@ function Places() {
         bgAct.current = bestI
         bgs.current.forEach((el, i) => el && el.classList.toggle('on', i === bestI))
       }
-    })
+    }, () => sec.current)
     return () => {
       unsub()
       window.removeEventListener('resize', measure)
@@ -594,7 +608,7 @@ function History() {
         el.style.transform = `scale(${1 - t * 0.07}) rotateX(${t * 6}deg)`
         el.style.filter = `brightness(${1 - t * 0.12})`
       })
-    })
+    }, () => wrap.current)
   }, [])
   return (
     <section className="sec history" id="history">
@@ -647,7 +661,7 @@ function People() {
         }
       })
       setFront(best)
-    })
+    }, () => sec.current)
     return unsub
   }, [])
   return (
@@ -658,6 +672,7 @@ function People() {
             <div key={p.ar} className={'pp-bgi' + (front === i ? ' on' : '')} style={PIMG[i] ? { backgroundImage: `url(./assets/${PIMG[i]})` } : undefined} />
           ))}
         </div>
+        <div className="pp-spot" aria-hidden="true" />
         <div className="pp-head">
           <p><b>٠٦</b><i />أعلام</p>
           <h2 className="h2">أعلام أنجبتهم البصرة</h2>
@@ -666,7 +681,7 @@ function People() {
           <div className="ring" ref={ring}>
             {people.map((p, i) => (
               <div key={p.ar} className="rcard" ref={(el) => (cardRefs.current[i] = el)} style={{ transform: `rotateY(${(i * 360) / people.length}deg) translateZ(var(--R))` }}>
-                {PIMG[i] ? <img className="rcard-img" src={'./assets/' + PIMG[i]} alt="" draggable="false" /> : <span className="rcard-letter" aria-hidden="true">ع</span>}
+                {PIMG[i] ? <img loading="lazy" decoding="async" className="rcard-img" src={'./assets/' + PIMG[i]} alt="" draggable="false" /> : <span className="rcard-letter" aria-hidden="true">ع</span>}
                 <span className="rcard-n">{ar(pad(i + 1))}</span>
                 <div className="rcard-tx">
                   <p className="rcard-name">{p.ar}</p>
@@ -676,7 +691,9 @@ function People() {
             ))}
           </div>
         </div>
-        <div className="people-detail" aria-live="polite">
+        <div className="pp-floor" aria-hidden="true" />
+        <div className="people-detail" aria-live="polite" key={front}>
+          <div className="people-count"><b>{ar(pad(front + 1))}</b><i /><span>{ar(pad(people.length))}</span></div>
           <h3 className="people-name">{people[front].ar}</h3>
           <p>{people[front].text}</p>
         </div>
@@ -716,11 +733,8 @@ function News() {
   return (
     <section className="sec news" id="news">
       <div className="nw-bg" aria-hidden="true">
-        <i className="nw-b1" /><i className="nw-b2" /><i className="nw-b3" />
-        <span className="nw-ghost">الأخبار</span>
-        <i className="nw-grid-bg" />
+        <i className="nw-photo" style={{ backgroundImage: "url(./assets/port.jpg)" }} />
         <i className="nw-dust" />
-        <i className="nw-beam" />
       </div>
       <div className="wrap">
         <div className="nw-head">
@@ -743,7 +757,6 @@ function News() {
             </article>
           ))}
         </div>
-        <p className="news-note">هذا القسم تجريبي، وسيُربط بمصدر أخبار حيّ بعد الإطلاق.</p>
       </div>
     </section>
   )
@@ -753,40 +766,51 @@ const MQ = ['البصرة', 'شطّ العرب', 'ثغر العراق', 'فين�
 const MQ2 = ['النهران', 'النخيل', 'الأهوار', 'الشناشيل', 'المشحوف', 'الغروب']
 
 function Footer() {
+  const root = useRef(null)
+  useEffect(() => {
+    const sp = document.querySelector('.ft-spacer')
+    if (!sp || !('IntersectionObserver' in window)) return root.current && root.current.classList.add('in')
+    const io = new IntersectionObserver(
+      ([e]) => root.current && root.current.classList.toggle('in', e.isIntersecting),
+      { threshold: 0.25 }
+    )
+    io.observe(sp)
+    return () => io.disconnect()
+  }, [])
+  const words = 'عيناكِ غابتا نخيلٍ ساعةَ السَّحَر'.split(' ')
   return (
     <>
       <div className="ft-spacer" aria-hidden="true" />
-      <footer className="ft">
-        <div className="ft-photo" aria-hidden="true" style={{ backgroundImage: "url(./assets/sunset.jpg)" }} />
-        <div className="ft-shade" aria-hidden="true" />
-        <div className="ft-wrap">
-          <div className="ft-top">
-            <p className="ft-kick"><b>٠٩</b><i />إلى اللقاء</p>
-            <h2 className="ft-h">لنُكمل<br />الرحلة معاً<span>.</span></h2>
+      <footer className="ft ftd-root" ref={root}>
+        <div className="ftd-bg" aria-hidden="true" />
+        <div className="ftd-pat" aria-hidden="true" />
+        <div className="ftd-glow" aria-hidden="true" />
+        <div className="ft-flies" aria-hidden="true">
+          {Array.from({ length: 12 }).map((_, i) => (<i key={i} style={{ '--x': `${(i * 37 + 11) % 100}%`, '--y': `${(i * 53 + 20) % 90}%`, '--d': `${6 + (i % 5) * 2}s`, '--s': `${(i * 0.7) % 5}s` }} />))}
+        </div>
+        <div className="ftd">
+          <div className="ftd-arch">
+            <div className="ftd-img" style={{ backgroundImage: "url(./assets/sunset.jpg)" }} />
+            <span className="ftd-cap">شطّ العرب عند الغروب</span>
           </div>
-          <div className="ft-mid">
-            <nav aria-label="روابط" className="ft-links">
-              {nav.map((n, i) => (
-                <a key={n.href} href={n.href}>
-                  <small>{ar(pad(i + 1))}</small>
-                  <span>{n.label}</span>
-                  <i aria-hidden="true">←</i>
-                </a>
-              ))}
+          <div className="ftd-txt">
+            <p className="ftd-kick"><b>٠٩</b><i />إلى اللقاء</p>
+            <figure className="ftd-poem">
+              <blockquote>
+                <span><b style={{ '--i': 0 }}>عيناكِ</b> <b style={{ '--i': 1 }}>غابتا</b> <b className="ftd-o" style={{ '--i': 2 }}>نخيلٍ</b></span>
+                <span><b style={{ '--i': 3 }}>ساعةَ</b> <b style={{ '--i': 4 }}>السَّحَر</b></span>
+              </blockquote>
+              <figcaption><i />بدر شاكر السيّاب · أنشودة المطر</figcaption>
+            </figure>
+            <nav className="ftd-nav" aria-label="روابط">
+              {nav.map((n, i) => (<a key={n.href} href={n.href}><small>{ar(pad(i + 1))}</small><span>{n.label}</span><i aria-hidden="true">←</i></a>))}
+              <a href="#top" className="ftd-top"><small>↑</small><span>عُد إلى بداية الرحلة</span><i aria-hidden="true">←</i></a>
             </nav>
-            <div className="ft-side">
-              <p className="ft-line">البصرة، حيث يلتقي النهران وتبدأ الحكايات. تأسست سنة ٦٣٦م، وما زال شطّ العرب يحمل أسماءها إلى الخليج.</p>
-              <a className="ft-up" href="#top"><i aria-hidden="true">↑</i><span>عُد إلى بداية الرحلة</span></a>
-            </div>
           </div>
-          <figure className="ft-poem">
-            <blockquote>عيناكِ غابتا نخيلٍ ساعةَ السَّحَر</blockquote>
-            <figcaption><i />بدر شاكر السيّاب · أنشودة المطر<i /></figcaption>
-          </figure>
-          <div className="ft-bot">
-            <p className="ft-made">Made by Iraqi hands</p>
-            <a className="ft-dj" href="https://dijlah.org/" target="_blank" rel="noopener noreferrer">dijlah</a>
-          </div>
+        </div>
+        <div className="ftd-bot">
+          <p className="ft-made">Made by Iraqi hands</p>
+          <a className="ft-dj" href="https://dijlah.org/" target="_blank" rel="noopener noreferrer">dijlah</a>
         </div>
       </footer>
     </>
@@ -800,6 +824,16 @@ function Gate() {
   const [mist, setMist] = useState(false)
   const away = useRef(false)
   const armAt = useRef(0)
+  const sceneOk = useRef(!!window.__basraReady)
+  useEffect(() => {
+    const f = () => (sceneOk.current = true)
+    window.addEventListener('basra-ready', f)
+    const tm = setTimeout(f, 15000)
+    return () => {
+      clearTimeout(tm)
+      window.removeEventListener('basra-ready', f)
+    }
+  }, [])
   const evs = ['wheel', 'touchstart', 'keydown', 'click']
   const ready = pr >= 1
   useEffect(() => {
@@ -809,8 +843,11 @@ function Gate() {
     let raf = 0
     const tick = (now) => {
       const k = Math.min(1, (now - t0) / 2600)
-      setPr(1 - Math.pow(1 - k, 2.2))
-      if (k < 1) raf = requestAnimationFrame(tick)
+      const base = 1 - Math.pow(1 - k, 2.2)
+      /* يقف التحميل عند ٩٢٪ حتى يكتمل بناء المشهد فعلاً */
+      const v = sceneOk.current ? base : Math.min(base, 0.92)
+      setPr(v)
+      if (v < 1) raf = requestAnimationFrame(tick)
     }
     raf = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(raf)

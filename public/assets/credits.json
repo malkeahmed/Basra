@@ -352,5 +352,15 @@
   "creator": "author to be confirmed (Sketchfab)",
   "license": "to be confirmed",
   "creditRequired": true
+ },
+ {
+  "file": "assets/p-farahidi.jpg",
+  "media": "image",
+  "title": "تمثال الخليل بن أحمد الفراهيدي",
+  "creator": "احمد محمود خضير",
+  "license": "CC BY-SA 3.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+  "creditRequired": true,
+  "page": "https://commons.wikimedia.org/wiki/File:%D9%81%D8%B1%D8%A7%D9%87%D9%8A%D8%AF%D9%8A.jpg"
  }
 ]

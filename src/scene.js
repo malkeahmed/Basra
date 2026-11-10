@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import { makePalmVariants, makeReeds, makeGrass, swayMaterial } from './palm.js'
 import { createPort, portBlend, portMask, inPort, makeGateSign } from './port.js'
 import { createSky, SKY_HAZE } from './sky.js'
@@ -205,9 +206,118 @@ function grassTexture() {
   return t
 }
 
-export function createScene(canvas, { low = false } = {}) {
+
+/*
+  دمج المجسّمات الثابتة: آلاف القطع الصغيرة (أعمدة إنارة، شرفات، أسوار...) تُرسم كل منها بطلب مستقلّ.
+  نرصد القطع التي لم تتحرّك إطلاقاً، ثم نضمّ ما يتشارك الخامة نفسها في دفعات صغيرة، فينخفض عدد طلبات الرسم عشرات المرّات.
+*/
+function freezeStatics(scene) {
+  const meshes = []
+  scene.traverse((o) => {
+    if (!o.isMesh || o.isInstancedMesh || o.isSkinnedMesh || !o.geometry || Array.isArray(o.material)) return
+    if (o.geometry.attributes.position.count > 6000) return
+    const m = o.material
+    if (!(m.isMeshStandardMaterial || m.isMeshBasicMaterial) || m.onBeforeCompile !== THREE.Material.prototype.onBeforeCompile) return
+    if (o.morphTargetInfluences || o.userData.noMerge) return
+    meshes.push(o)
+  })
+  const snap = () => {
+    const mp = new Map()
+    meshes.forEach((o) => {
+      o.updateWorldMatrix(true, false)
+      let vis = 1
+      for (let p = o; p; p = p.parent) if (!p.visible) vis = 0
+      mp.set(o, [vis, ...o.matrixWorld.elements])
+    })
+    return mp
+  }
+  const same = (a, b) => {
+    for (let i = 0; i < a.length; i++) if (Math.abs(a[i] - b[i]) > 1e-4) return false
+    return true
+  }
+  const s0 = snap()
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const s1 = snap()
+      setTimeout(() => {
+        const s2 = snap()
+        const groups = new Map()
+        const kept = []
+        meshes.forEach((o) => {
+          const a = s0.get(o)
+          if (!a[0] || !same(a, s1.get(o)) || !same(a, s2.get(o))) return
+          const m = o.material
+          const bake = !m.map && !m.emissiveMap && m.color
+          const key = [m.type, bake ? 'baked' : m.color && m.color.getHex(), m.map && m.map.uuid, m.emissive && m.emissive.getHex(), m.emissiveIntensity, m.roughness, m.metalness, m.transparent, m.opacity, m.side, bake ? 1 : m.vertexColors, m.flatShading, m.alphaTest, m.depthWrite, m.emissiveMap && m.emissiveMap.uuid, m.normalMap && m.normalMap.uuid, o.castShadow, o.receiveShadow, o.renderOrder].join('|')
+          const g = o.geometry.clone()
+          g.applyMatrix4(o.matrixWorld)
+          if (!g.attributes.normal) g.computeVertexNormals()
+          if (!g.attributes.uv) g.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(g.attributes.position.count * 2), 2))
+          const wantColor = bake || m.vertexColors
+          if (wantColor) {
+            const n = g.attributes.position.count
+            let c = g.attributes.color
+            if (c && c.itemSize !== 3) return g.dispose()
+            const arr = new Float32Array(n * 3).fill(1)
+            if (c) for (let i = 0; i < n * 3; i++) arr[i] = c.array[i]
+            if (bake) for (let i = 0; i < n; i++) {
+              arr[i * 3] *= m.color.r
+              arr[i * 3 + 1] *= m.color.g
+              arr[i * 3 + 2] *= m.color.b
+            }
+            g.setAttribute('color', new THREE.BufferAttribute(arr, 3))
+          }
+          Object.keys(g.attributes).forEach((n) => {
+            if (n !== 'position' && n !== 'normal' && n !== 'uv' && n !== 'color') g.deleteAttribute(n)
+          })
+          if (!wantColor && g.attributes.color) g.deleteAttribute('color')
+          if (!g.index) {
+            const n = g.attributes.position.count
+            const idx = new Uint32Array(n)
+            for (let i = 0; i < n; i++) idx[i] = i
+            g.setIndex(new THREE.BufferAttribute(idx, 1))
+          }
+          g.computeBoundingSphere()
+          const c = g.boundingSphere.center
+          const ck = key + '#' + Math.floor(c.z / 90) + ':' + Math.floor(c.x / 180)
+          if (!groups.has(ck)) groups.set(ck, { baked: !!bake, mat: bake ? Object.assign(m.clone(), { vertexColors: true }) : m, cast: o.castShadow, recv: o.receiveShadow, ro: o.renderOrder, list: [] })
+          groups.get(ck).list.push(g)
+          kept.push(o)
+        })
+        groups.forEach((gr) => {
+          const merged = gr.list.length > 1 ? mergeGeometries(gr.list, false) : gr.list[0]
+          if (!merged) return
+          merged.computeBoundingSphere()
+          if (gr.baked) gr.mat.color.setRGB(1, 1, 1)
+          const mesh = new THREE.Mesh(merged, gr.mat)
+          mesh.castShadow = gr.cast
+          mesh.receiveShadow = gr.recv
+          mesh.renderOrder = gr.ro
+          mesh.matrixAutoUpdate = false
+          scene.add(mesh)
+          if (gr.list.length > 1) gr.list.forEach((g) => g.dispose())
+        })
+        kept.forEach((o) => {
+          o.parent && o.parent.remove(o)
+          o.geometry.dispose()
+        })
+        resolve(kept.length)
+      }, 1100)
+    }, 700)
+  })
+}
+
+export async function createScene(canvas, { low = false } = {}) {
+  /* يتنفّس المتصفّح بين مراحل البناء فيبقى مدخل الموقع متحرّكاً وسلساً بدل التجمّد */
+  const mc = new MessageChannel()
+  const Y = () =>
+    new Promise((r) => {
+      if (document.hidden) return r()
+      mc.port1.onmessage = () => r()
+      mc.port2.postMessage(0)
+    })
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: !low, alpha: false, powerPreference: 'high-performance' })
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, low ? 1.4 : 2))
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, low ? 1.25 : 1.5))
   renderer.setClearColor(SKY_HAZE)
   if (!low) {
     renderer.shadowMap.enabled = true
@@ -240,6 +350,7 @@ export function createScene(canvas, { low = false } = {}) {
   scene.add(sun, sun.target)
   const uTime = { value: 0 }
 
+  await Y()
   /* الجسر الإيطالي (جسر محمد باقر الصدر) */
   const bridge = createBridge(scene, { riverX, halfW, low })
 
@@ -247,6 +358,7 @@ export function createScene(canvas, { low = false } = {}) {
   const sky = createSky({ low })
   scene.add(sky)
 
+  await Y()
   /* التضاريس */
   const tw = 440
   const tl = 900
@@ -285,6 +397,7 @@ export function createScene(canvas, { low = false } = {}) {
   terrain.receiveShadow = true
   scene.add(terrain)
 
+  await Y()
   /* الأراضي البعيدة: سهل أخضر ممتدّ على الجانبين بعد حافّة التضاريس القديمة، يتّصل بها من غير درز، فلا يظهر أيّ بحر أو فراغ بين الضفّتين والأفق */
   const FAR_EDGE = tw / 2
   const farH = (x, z) => {
@@ -324,6 +437,7 @@ export function createScene(canvas, { low = false } = {}) {
     scene.add(fm)
   })
 
+  await Y()
   /* النهر */
   const rows = 330
   const cl = 14
@@ -461,6 +575,7 @@ export function createScene(canvas, { low = false } = {}) {
   const water = new THREE.Mesh(wg, waterMat)
   scene.add(water)
 
+  await Y()
   /* بحر بعيد طبيعي: يملأ الأفق خلف النهر بدل الخلفية الزرقاء المسطّحة — تموّج هادئ، انعكاس السماء ولمعان الشمس */
   const seaMat = new THREE.ShaderMaterial({
     fog: false,
@@ -536,6 +651,7 @@ export function createScene(canvas, { low = false } = {}) {
   sea.renderOrder = -1
   scene.add(sea)
 
+  await Y()
   /* النخيل */
   const variants = makePalmVariants()
   const palmCount = low ? 90 : 210
@@ -561,6 +677,7 @@ export function createScene(canvas, { low = false } = {}) {
     mats[Math.floor(r2() * variants.length)].push(dummy.matrix.clone())
     placed++
   }
+  await Y()
   /* غابة نخيل كثيفة على الأراضي البعيدة، يميناً ويساراً، تملأ السهل حتى الأفق */
   {
     const farN = low ? 420 : 1500
@@ -584,23 +701,34 @@ export function createScene(canvas, { low = false } = {}) {
   const frondMat = swayMaterial(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.7, side: THREE.DoubleSide }), uTime, 0.6, true)
   const dateMat = swayMaterial(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.55 }), uTime, 0.6)
   const palmMeshes = []
+  /* النخيل مقسّم إلى مقاطع على طول النهر، فيُستبعد خارج الإطار بدل أن يُرسم كله دائماً */
   variants.forEach((v, i) => {
-    const list = mats[i]
-    if (!list.length) return
-    ;[
-      [v.trunk, trunkMat],
-      [v.fronds, frondMat],
-      [v.dates, dateMat],
-    ].forEach(([geo, mat]) => {
-      const im = new THREE.InstancedMesh(geo, mat, list.length)
-      list.forEach((m, j) => im.setMatrixAt(j, m))
-      im.castShadow = !low
-      im.frustumCulled = false
-      palmMeshes.push({ mesh: im, full: list.length })
-      scene.add(im)
+    const all = mats[i]
+    if (!all.length) return
+    const chunks = new Map()
+    all.forEach((m) => {
+      const key = Math.floor(-m.elements[14] / 100)
+      if (!chunks.has(key)) chunks.set(key, [])
+      chunks.get(key).push(m)
+    })
+    chunks.forEach((list) => {
+      ;[
+        [v.trunk, trunkMat],
+        [v.fronds, frondMat],
+        [v.dates, dateMat],
+      ].forEach(([geo, mat]) => {
+        const im = new THREE.InstancedMesh(geo, mat, list.length)
+        list.forEach((m, j) => im.setMatrixAt(j, m))
+        im.castShadow = !low && geo === v.trunk
+        im.computeBoundingSphere()
+        im.boundingSphere.radius += 18
+        palmMeshes.push({ mesh: im, full: list.length })
+        scene.add(im)
+      })
     })
   })
 
+  await Y()
   /* قصب الضفاف */
   const reedGeo = makeReeds()
   const reedCount = low ? 240 : 620
@@ -642,6 +770,7 @@ export function createScene(canvas, { low = false } = {}) {
   grass.frustumCulled = false
   scene.add(grass)
 
+  await Y()
   /* القوارب والسفن */
   const darkMat = new THREE.MeshStandardMaterial({ color: INK, roughness: 0.8, flatShading: true })
   const boats = []
@@ -685,6 +814,7 @@ export function createScene(canvas, { low = false } = {}) {
   /* بارجة بقاطرة في المسار الأيسر تصعد النهر قبل منطقة الميناء */
   place(makeBargeTug(), { z: -300, off: -48, flip: true, speed: 1.9, bob: 0.06, spawnZ: -362 })
 
+  await Y()
   /* تمثال السيّاب على الكورنيش */
   createStatuePlaza(scene, { riverX, halfW, renderer, low })
 
@@ -730,17 +860,22 @@ export function createScene(canvas, { low = false } = {}) {
       })
     })
   }
+  await Y()
   const port = createPort(scene, { riverX, halfW, low, plantPalms })
+  await Y()
   const corn = createCorniche(scene, { riverX, halfW, terrainH, low, plantPalms })
   obst.push(...corn.obstacles())
+  await Y()
   const oil = createOilField(scene, { riverX, halfW, terrainH, low })
   obst.push(...oil.obstacles())
+  await Y()
   const stad = createStadium(scene, { riverX, halfW, terrainH, low, plantPalms })
   const cship = makeContainerShip()
   place(cship, { z: -402, off: port.berth(-402, 4.6), bob: 0.04 })
   port.attachShip(cship)
   place(makeTanker(), { z: -472, off: port.berth(-472, 3.9), scale: 0.9, bob: 0.04 })
 
+  await Y()
   /* بيوت الشناشيل والمسجد */
   const latTex = latticeTexture()
   const latMat = new THREE.MeshStandardMaterial({ map: latTex, roughness: 1 })
@@ -784,12 +919,14 @@ export function createScene(canvas, { low = false } = {}) {
   scene.add(cap)
 
 
+  await Y()
   /* مراقب الجودة: يخفّف المشهد تلقائياً على الأجهزة الضعيفة كي لا يتجمّد الموقع */
   let quality = 0
   function applyQuality(l) {
     quality = l
     const dpr = window.devicePixelRatio || 1
-    renderer.setPixelRatio([Math.min(dpr, low ? 1.4 : 2), Math.min(dpr, 1.25), 1][l])
+    renderer.setPixelRatio([Math.min(dpr, low ? 1.25 : 1.5), Math.min(dpr, 1.0), 0.75][l])
+    document.body.classList.toggle('lowfx', l >= 1)
     const sh = l === 0 && !low
     renderer.shadowMap.enabled = sh
     sun.castShadow = sh
@@ -809,6 +946,7 @@ export function createScene(canvas, { low = false } = {}) {
     const weak = /intel|uhd|iris|mali|adreno|apple gpu|swiftshader|llvmpipe|software/i.test(name) && !/arc|rtx|rx |radeon pro/i.test(name)
     if (weak || (navigator.hardwareConcurrency || 8) <= 4) setTimeout(() => applyQuality(1), 0)
   } catch (e) {}
+  const tBoot = performance.now()
   let accT = 0
   let accN = 0
   let lastT = performance.now()
@@ -917,7 +1055,7 @@ export function createScene(canvas, { low = false } = {}) {
       accT += dtm
       accN++
       if (accN >= 40) {
-        if (accT / accN > 42 && quality < 2) applyQuality(quality + 1)
+        if (now - tBoot > 5000 && accT / accN > 25 && quality < 2) applyQuality(quality + 1)
         accT = 0
         accN = 0
       }
@@ -1080,7 +1218,12 @@ export function createScene(canvas, { low = false } = {}) {
     }
     renderer.render(scene, camera)
   }
+  try {
+    await Promise.race([renderer.compileAsync(scene, camera), new Promise((r) => setTimeout(r, 3000))])
+  } catch (e) {}
   tick()
+  /* بعد استقرار المشهد: دمج الثابت منه لتخفيف طلبات الرسم */
+  setTimeout(() => freezeStatics(scene).then(() => {}).catch(() => {}), 1200)
 
   return {
     setProgress(p) {

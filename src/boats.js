@@ -767,6 +767,23 @@ export function makeFlag(scale = 1, height = 12) {
   return g
 }
 
+/* تحميل واحد لكل نموذج، وكلّ نسخة تستنسخه وتشارك الهندسة والخامات، مع تأجيله ليخفّ التحميل الأوّل */
+const glbCache = new Map()
+const glbLoader = new GLTFLoader()
+function loadGLB(file) {
+  if (!glbCache.has(file)) {
+    glbCache.set(
+      file,
+      new Promise((resolve, reject) => {
+        const go = () => glbLoader.load(file, (g) => resolve(g.scene), undefined, reject)
+        if ('requestIdleCallback' in window) requestIdleCallback(go, { timeout: 2500 })
+        else setTimeout(go, 600)
+      })
+    )
+  }
+  return glbCache.get(file)
+}
+
 /* سارية بعلم العراق (تلوّح بفعل الريح) على مؤخّرة السفينة، يتدلّى العلم خلفها */
 function addIraqFlag(g, x, y, z, s = 1) {
   g.add(cyl(0.05 * s, 0.06 * s, 4 * s, 0xe8e8e8, x, y + 2 * s, z, 6))
@@ -780,8 +797,8 @@ export function makeCargoShipGLB({ L = 64, file = 'assets/cargo-ship.glb', flip 
   const g = new THREE.Group()
   const B = L * beam
   g.userData = { draft: L * 0.045, L, B, kind, cranes: [] }
-  new GLTFLoader().load(file, (gltf) => {
-    const m = gltf.scene
+  loadGLB(file).then((src) => {
+    const m = src.clone(true)
     let box = new THREE.Box3().setFromObject(m)
     let size = box.getSize(new THREE.Vector3())
     if (yaw !== null) {

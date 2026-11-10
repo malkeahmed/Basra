@@ -9,7 +9,7 @@ export function installSmoothScroll() {
   let target = window.scrollY
   let raf = 0
   let last = 0
-  let self = false
+  let expected = window.scrollY
   const max = () => root.scrollHeight - window.innerHeight
   const clampT = (v) => Math.max(0, Math.min(max(), v))
   const locked = () => root.style.overflow === 'hidden' || !!document.querySelector('.menu-open')
@@ -19,14 +19,21 @@ export function installSmoothScroll() {
     last = now
     const cur = window.scrollY
     const diff = target - cur
-    if (Math.abs(diff) < 0.3) {
-      self = true
-      window.scrollTo(0, target)
+    if (Math.abs(cur - expected) > 2) {
+      /* تمرير خارجي (شريط التمرير أو برمجي): نتبعه بدل مقاومته */
+      target = cur
+      expected = cur
       raf = 0
       return
     }
-    self = true
+    if (Math.abs(diff) < 0.3) {
+      window.scrollTo(0, target)
+      expected = window.scrollY
+      raf = 0
+      return
+    }
     window.scrollTo(0, cur + diff * (1 - Math.exp(-dt * 6.5)))
+    expected = window.scrollY
     raf = requestAnimationFrame(tick)
   }
   const kick = () => {
@@ -56,11 +63,10 @@ export function installSmoothScroll() {
   window.addEventListener(
     'scroll',
     () => {
-      if (self) {
-        self = false
-        return
+      if (Math.abs(window.scrollY - expected) > 2) {
+        target = window.scrollY
+        expected = target
       }
-      if (!raf) target = window.scrollY
     },
     { passive: true }
   )
