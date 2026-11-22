@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { nav, chapters, gateHistory, stats, places, eras, people, tastes, news, credits } from './data.js'
+import Folklore from './FolkloreSection.jsx'
+import { nav, chapters, gateHistory, stats, places, eras, people, tastes, credits } from './data.js'
 import { PalmGrove, Palm } from './art.jsx'
 import { subscribe, clamp, smooth } from './scroll.js'
 import { createScene } from './scene.js'
@@ -737,40 +738,6 @@ function Culture() {
   )
 }
 
-const NIMG = ['port.jpg', 'stadium-real.jpg', 't-dates.jpg', 'marshes.jpg', 'mirbad-old.jpg']
-function News() {
-  const [hv, setHv] = useState(0)
-  return (
-    <section className="sec news" id="news">
-      <div className="nw-bg" aria-hidden="true">
-        {NIMG.map((im, i) => (<i key={im} className={'nw-cine' + (hv === i ? ' on' : '')} style={{ backgroundImage: `url(./assets/${im})` }} />))}
-      </div>
-      <div className="wrap">
-        <div className="nw-head">
-          <p className="rv"><b>٠٨</b><i />الأخبار</p>
-          <h2 className="h2 rv" style={{ '--d': '80ms' }}>آخر أخبار البصرة</h2>
-        </div>
-        <div className="nw-grid">
-          {news.map((n, i) => (
-            <article key={n.title} className={'nw-card nw-' + i + ' rv'} onMouseEnter={() => setHv(i)} onFocus={() => setHv(i)} tabIndex={0} style={{ '--d': `${i * 90}ms` }}>
-              <img src={'./assets/' + NIMG[i]} alt="" loading="lazy" draggable="false" />
-              <div className="nw-top">
-                <span className="nw-tag">{n.tag}</span>
-                {i === 0 ? <span className="nw-star">الأبرز</span> : <span className="nw-no">{ar(pad(i + 1))}</span>}
-              </div>
-              <div className="nw-body">
-                <h3>{n.title}</h3>
-                <p>{n.text}</p>
-                <span className="nw-ar" aria-hidden="true">←</span>
-              </div>
-            </article>
-          ))}
-        </div>
-      </div>
-    </section>
-  )
-}
-
 const MQ = ['البصرة', 'شطّ العرب', 'ثغر العراق', 'فينيسيا الشرق', 'مدينة السندباد', 'أرض النخيل']
 const MQ2 = ['النهران', 'النخيل', 'الأهوار', 'الشناشيل', 'المشحوف', 'الغروب']
 
@@ -942,7 +909,7 @@ export default function App() {
         <History />
         <People />
         <Culture />
-        <News />
+        <Folklore />
       </main>
       <Footer />
     </>

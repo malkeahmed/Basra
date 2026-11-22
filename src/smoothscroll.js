@@ -10,6 +10,8 @@ export function installSmoothScroll() {
   let raf = 0
   let last = 0
   let expected = window.scrollY
+  /* وجهة الرابط الداخلي: تُقاس في كل إطار لأن ارتفاع الأقسام قد يتغيّر أثناء الانزلاق */
+  let dest = null
   const max = () => root.scrollHeight - window.innerHeight
   const clampT = (v) => Math.max(0, Math.min(max(), v))
   const locked = () => root.style.overflow === 'hidden' || !!document.querySelector('.menu-open')
@@ -18,8 +20,9 @@ export function installSmoothScroll() {
     const dt = Math.min(0.05, (now - last) / 1000 || 0.016)
     last = now
     const cur = window.scrollY
+    if (dest) target = clampT(dest.getBoundingClientRect().top + cur - Number(dest.dataset.scrollOffset ?? 20))
     const diff = target - cur
-    if (Math.abs(cur - expected) > 2) {
+    if (!dest && Math.abs(cur - expected) > 2) {
       /* تمرير خارجي (شريط التمرير أو برمجي): نتبعه بدل مقاومته */
       target = cur
       expected = cur
@@ -29,6 +32,7 @@ export function installSmoothScroll() {
     if (Math.abs(diff) < 0.3) {
       window.scrollTo(0, target)
       expected = window.scrollY
+      dest = null
       raf = 0
       return
     }
@@ -43,9 +47,17 @@ export function installSmoothScroll() {
     }
   }
 
+  /* أيّ تدخّل من الزائر يلغي الانزلاق نحو الرابط */
+  const release = () => {
+    if (!dest) return
+    dest = null
+    target = expected = window.scrollY
+  }
+  for (const type of ['pointerdown', 'keydown', 'touchstart']) window.addEventListener(type, release, { passive: true })
   window.addEventListener(
     'wheel',
     (e) => {
+      release()
       if (e.ctrlKey || e.defaultPrevented) return
       if (locked() || e.target.closest?.('.mn, textarea, [data-native-scroll]')) {
         target = window.scrollY
@@ -63,7 +75,7 @@ export function installSmoothScroll() {
   window.addEventListener(
     'scroll',
     () => {
-      if (Math.abs(window.scrollY - expected) > 2) {
+      if (!dest && Math.abs(window.scrollY - expected) > 2) {
         target = window.scrollY
         expected = target
       }
@@ -78,7 +90,7 @@ export function installSmoothScroll() {
     const el = document.querySelector(a.getAttribute('href'))
     if (!el) return
     e.preventDefault()
-    target = clampT(el.getBoundingClientRect().top + window.scrollY - 20)
+    dest = el
     kick()
   })
 }
