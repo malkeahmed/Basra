@@ -973,5 +973,95 @@
   "changes": "resized and re-encoded as JPEG",
   "credit": "\"An old man reading in the tea house\" by Haremhassan, CC BY-SA 4.0, via Wikimedia Commons",
   "saved": "2026-11-22"
+ },
+ {
+  "file": "assets/food-masgouf.jpg",
+  "title": "Masgouf, an Iraqi tradition - Flickr - Al Jazeera English.jpg",
+  "license": "CC BY-SA 2.0",
+  "creator": "Al Jazeera English",
+  "page": "https://commons.wikimedia.org/wiki/File:Masgouf,_an_Iraqi_tradition_-_Flickr_-_Al_Jazeera_English.jpg",
+  "via": "Wikimedia Commons",
+  "media": "image"
+ },
+ {
+  "file": "assets/food-sayadiyah.jpg",
+  "title": "Sayadiyah Fish.jpg",
+  "license": "CC0",
+  "creator": "Miansari66",
+  "page": "https://commons.wikimedia.org/wiki/File:Sayadiyah_Fish.jpg",
+  "via": "Wikimedia Commons",
+  "media": "image"
+ },
+ {
+  "file": "assets/food-qouzi.jpg",
+  "title": "Qouzi (Iraqi grilled lamb) - Flickr - Al Jazeera English.jpg",
+  "license": "CC BY-SA 2.0",
+  "creator": "Omar Chatriwala of Al Jazeera English",
+  "page": "https://commons.wikimedia.org/wiki/File:Qouzi_(Iraqi_grilled_lamb)_-_Flickr_-_Al_Jazeera_English.jpg",
+  "via": "Wikimedia Commons",
+  "media": "image"
+ },
+ {
+  "file": "assets/food-tashreeb.jpg",
+  "title": "Tashreeb Iraqi.JPG",
+  "license": "CC0",
+  "creator": "Miansari66",
+  "page": "https://commons.wikimedia.org/wiki/File:Tashreeb_Iraqi.JPG",
+  "via": "Wikimedia Commons",
+  "media": "image"
+ },
+ {
+  "file": "assets/food-biryani.jpg",
+  "title": "Iraqi Chicken Biryani.jpg",
+  "license": "CC0",
+  "creator": "Miansari66",
+  "page": "https://commons.wikimedia.org/wiki/File:Iraqi_Chicken_Biryani.jpg",
+  "via": "Wikimedia Commons",
+  "media": "image"
+ },
+ {
+  "file": "assets/food-dolma.jpg",
+  "title": "Iraqi Dolma-Mosul 04.jpg",
+  "license": "CC BY-SA 4.0",
+  "creator": "Abdulsalam Al Dabbagh",
+  "page": "https://commons.wikimedia.org/wiki/File:Iraqi_Dolma-Mosul_04.jpg",
+  "via": "Wikimedia Commons",
+  "media": "image"
+ },
+ {
+  "file": "assets/food-tepsi.jpg",
+  "title": "Tepsi-Baytinijan.jpg",
+  "license": "CC BY-SA 4.0",
+  "creator": "Peteravivangel",
+  "page": "https://commons.wikimedia.org/wiki/File:Tepsi-Baytinijan.jpg",
+  "via": "Wikimedia Commons",
+  "media": "image"
+ },
+ {
+  "file": "assets/guide-sheraton.jpg",
+  "title": "Basra Sheratton Hotel.jpg",
+  "license": "CC BY-SA 4.0",
+  "creator": "Alyaa99",
+  "page": "https://commons.wikimedia.org/wiki/File:Basra_Sheratton_Hotel.jpg",
+  "via": "Wikimedia Commons",
+  "media": "image"
+ },
+ {
+  "file": "assets/vid-sports.webm",
+  "title": "Basra Sports City - Jul 31, 2014.webm",
+  "license": "CC BY 3.0",
+  "creator": "Commons uploader (via YouTube)",
+  "page": "https://commons.wikimedia.org/wiki/File:Basra_Sports_City_-_Jul_31,_2014.webm",
+  "via": "Wikimedia Commons",
+  "media": "video"
+ },
+ {
+  "file": "assets/vid-shrines.webm",
+  "title": "Holy shrines of Hazrat Imam Hassan e Basri and Hazrat Imam Bin Sereen in Basra",
+  "license": "CC0",
+  "creator": "Iftakhar Ahmad Qadri",
+  "page": "https://commons.wikimedia.org/wiki/File:Holy_shrines_of_Hazrat_Imam_Hassan_e_Basri_%26_Hazrat_Imam_Bin_Sereen_in_Basra_Vid_by_Iftakhar_Ahmad_Qadri_Copyright_Owner_Authorize_to_Upload.webm",
+  "via": "Wikimedia Commons",
+  "media": "video"
  }
 ]

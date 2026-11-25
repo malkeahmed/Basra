@@ -2172,3 +2172,87 @@ body.lowfx .ftn-bar nav a { backdrop-filter: none; -webkit-backdrop-filter: none
   .ftd-poem blockquote { font-size: clamp(1.6rem, 9vh, 2.4rem); }
   .ftd-nav a { font-size: .875rem; }
 }
+
+
+/* ===== أداء: إزالة backdrop-filter (تُعاد حسابه كل إطار فوق المشهد والصور والفيديو) وتعويضه بخلفيات أعتم ===== */
+*:not(.nav-in):not(.nav-in *), *::before, *::after {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+.hg, .chap-card, .rcard-tx, .era-body, .ftb-c, .ft-dock, .ft-now, .ftn-bar nav a { background-color: rgba(16, 11, 6, .62) !important; background-image: none !important; }
+.hg { background-color: rgba(10, 28, 52, .5) !important; }
+.gd-film, .gd-edcard, .gd-slide figcaption, .gd-modal, .gd-bar { background-color: rgba(14, 14, 20, .78) !important; }
+.gd-bar { background: none !important; }
+.sh-core, .vd-title, .vd-ctl { background-color: rgba(10, 28, 52, .6); }
+.vd-title, .vd-ctl { background-color: rgba(246, 243, 236, .96); }
+.gd-isle, .nav-in, .nav.scrolled .nav-in { background: none !important; background-color: transparent !important; }
+/* ظهور أخفّ على المعالج الرسومي */
+.rv, .stage-canvas { backface-visibility: hidden; }
+img { image-rendering: auto; }
+
+/* ===== أداء: بلور الخلفيات الكبيرة والنسيج الضوضائي ===== */
+.pl-bgi { filter: blur(14px) saturate(1.2) brightness(.75) !important; }
+.pp-bgi { filter: blur(14px) saturate(1.2) brightness(.7) !important; }
+.gd-amb img { filter: blur(16px) brightness(.42) saturate(1.3) !important; }
+.gd-bg i { filter: none !important; -webkit-mask-image: radial-gradient(closest-side, #000 10%, transparent 100%); mask-image: radial-gradient(closest-side, #000 10%, transparent 100%); }
+.gd-bg b, .gn-card::before { display: none !important; }
+.nw-beam { filter: none !important; }
+/* أي عنصر خارج الشاشة لا يحتاج طبقة مستقلة */
+.stage-canvas { transform: translateZ(0); }
+
+/* نص البوّابة السفلي بالعربية: بلا تباعد بين الحروف حتى لا تنفصل */
+.gx-cue span { font-family: 'Amiri', 'IBM Plex Sans Arabic', serif; font-weight: 400; font-size: 1.15rem; letter-spacing: 0; }
+
+/* زر «اسحب للأسفل»: بلا خلفية */
+.scroll-hint, .scroll-hint:hover { background: none !important; background-color: transparent !important; }
+
+
+/* ===== شريط الفوتر السفلي: توقيع وحقوق وزر dijlah ===== */
+.ftd-root .ftd-bot { align-items: center; justify-content: space-between; gap: 18px; padding-top: 14px; bottom: 14px; font-size: .9rem; color: #2a1f12; }
+.ftd-root .ftd-bot::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(138, 106, 44, .6) 15%, rgba(138, 106, 44, .6) 85%, transparent); }
+.ftd-root .ftd-bot::after { content: ''; position: absolute; top: -3px; left: 50%; width: 6px; height: 6px; margin-left: -3px; transform: rotate(45deg); background: #8a6a2c; box-shadow: 0 0 0 3px #dfe3ea; }
+.fb-made { display: inline-flex; align-items: center; gap: 12px; color: #2a1f12; }
+.fb-made span { font-family: 'Amiri', 'IBM Plex Sans Arabic', serif; font-size: 1.15rem; font-weight: 700; }
+.fb-made i { width: 4px; height: 4px; transform: rotate(45deg); background: #8a6a2c; }
+.fb-made em { font-family: 'Syne', 'Unbounded', sans-serif; font-style: normal; font-size: .62rem; font-weight: 600; letter-spacing: .3em; text-transform: uppercase; color: #6b5a3c; direction: ltr; }
+.fb-copy { font-size: .85rem; color: rgba(42, 31, 18, .65); letter-spacing: .04em; }
+.ftd-root .ftd-bot .fb-dj { display: inline-flex; align-items: center; gap: 10px; padding: 9px 18px; border-radius: 99px; background: #2a1f12; color: #f1d58f; font-family: 'Syne', 'Unbounded', sans-serif; font-size: .78rem; font-weight: 600; letter-spacing: .22em; text-decoration: none; text-transform: uppercase; transition: background .4s, color .4s, transform .5s cubic-bezier(.34, 1.3, .64, 1), box-shadow .5s; }
+.ftd-root .ftd-bot .fb-dj svg { transition: transform .5s cubic-bezier(.34, 1.3, .64, 1); }
+.ftd-root .ftd-bot .fb-dj:hover { background: #8a6a2c; color: #fff; transform: translateY(-3px); box-shadow: 0 14px 30px -12px rgba(42, 31, 18, .6); }
+.ftd-root .ftd-bot .fb-dj:hover svg { transform: translate(2px, -2px); }
+@media (max-width: 900px) { .fb-copy { display: none; } .fb-made em { display: none; } }
+.ftd-root .ftd { padding-bottom: 124px; }
+.ftd-root .ftd-bot::before, .ftd-root .ftd-bot::after { display: none; }
+.ftd-root .ftd-bot { bottom: 12px; }
+.ftd-root .ftd-bot::before, .ftd-root .ftd-bot::after { display: block; }
+.ftd-root .ftd-bot { bottom: 8px; padding-top: 12px; }
+.ftd-root .ftd-nav a { padding-block: clamp(6px, 1.1vh, 10px); }
+/* الحقوق في الوسط تماماً: ثلاثة أعمدة، الجانبان بعرض متساوٍ */
+.ftd-root .ftd-bot { display: grid; grid-template-columns: 1fr auto 1fr; }
+.ftd-root .ftd-bot .fb-made { justify-self: start; }
+.ftd-root .ftd-bot .fb-copy { justify-self: center; text-align: center; }
+.ftd-root .ftd-bot .fb-dj { justify-self: end; }
+@media (max-width: 900px) { .ftd-root .ftd-bot { grid-template-columns: 1fr auto; } }
+
+/* زر dijlah الجديد: نص من سطرين ودائرة ذهبية بسهم */
+.ftd-root .ftd-bot .fb-dj { display: inline-flex; align-items: center; gap: 14px; padding: 0; background: none; color: #2a1f12; border-radius: 0; text-transform: none; letter-spacing: 0; font-family: inherit; box-shadow: none; }
+.fb-dj-tx { display: flex; flex-direction: column; align-items: flex-end; line-height: 1.15; }
+.fb-dj-tx small { font-size: .78rem; font-weight: 500; color: rgba(42, 31, 18, .6); letter-spacing: .04em; }
+.fb-dj-tx b { font-family: 'Syne', 'Unbounded', sans-serif; font-size: 1.15rem; font-weight: 700; letter-spacing: .02em; text-transform: lowercase; color: #2a1f12; }
+.fb-dj-ic { width: 46px; height: 46px; display: grid; place-items: center; border-radius: 50%; background: #e2c27c; color: #2a1f12; box-shadow: 0 0 0 1px rgba(138, 106, 44, .5); transition: transform .6s cubic-bezier(.34, 1.3, .64, 1), background .4s, color .4s, box-shadow .5s; }
+.fb-dj-ic svg { transition: transform .6s cubic-bezier(.34, 1.3, .64, 1); }
+.ftd-root .ftd-bot .fb-dj:hover { background: none; color: #2a1f12; transform: none; box-shadow: none; }
+.ftd-root .ftd-bot .fb-dj:hover .fb-dj-ic { background: #2a1f12; color: #e2c27c; transform: rotate(-12deg) scale(1.08); box-shadow: 0 14px 28px -10px rgba(42, 31, 18, .55); }
+.ftd-root .ftd-bot .fb-dj:hover .fb-dj-ic svg { transform: rotate(45deg); }
+
+/* dijlah: سطر واحد يطابق توقيع الجهة الأخرى، مع خط ذهبي ينزلق عند التمرير */
+.ftd-root .ftd-bot .fb-dj { position: relative; display: inline-flex; align-items: center; gap: 12px; padding: 4px 0 8px; background: none; border-radius: 0; box-shadow: none; transform: none; color: #2a1f12; }
+.fb-dj-l { font-family: 'Amiri', 'IBM Plex Sans Arabic', serif; font-size: 1.15rem; font-weight: 700; }
+.ftd-root .ftd-bot .fb-dj i { width: 4px; height: 4px; transform: rotate(45deg); background: #8a6a2c; }
+.ftd-root .ftd-bot .fb-dj em { display: inline-flex; align-items: center; gap: 6px; font-family: 'Syne', 'Unbounded', sans-serif; font-style: normal; font-size: .66rem; font-weight: 600; letter-spacing: .3em; text-transform: uppercase; color: #6b5a3c; direction: ltr; transition: color .4s, letter-spacing .6s cubic-bezier(.16, 1, .3, 1); }
+.ftd-root .ftd-bot .fb-dj em svg { transition: transform .5s cubic-bezier(.34, 1.3, .64, 1); }
+.ftd-root .ftd-bot .fb-dj::after { content: ''; position: absolute; inset: auto 0 0 0; height: 1px; background: #8a6a2c; transform: scaleX(0); transform-origin: right; transition: transform .7s cubic-bezier(.16, 1, .3, 1); }
+.ftd-root .ftd-bot .fb-dj:hover { background: none; box-shadow: none; transform: none; }
+.ftd-root .ftd-bot .fb-dj:hover em { color: #2a1f12; letter-spacing: .38em; }
+.ftd-root .ftd-bot .fb-dj:hover em svg { transform: translate(2px, -2px); }
+.ftd-root .ftd-bot .fb-dj:hover::after { transform: scaleX(1); }

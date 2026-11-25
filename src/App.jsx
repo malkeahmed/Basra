@@ -1,9 +1,14 @@
-import React, { useEffect, useRef, useState } from 'react'
-import Folklore from './FolkloreSection.jsx'
+import React, { useEffect, useRef, useState, lazy, Suspense } from 'react'
+const Folklore = lazy(() => import('./FolkloreSection.jsx'))
+const Figures = lazy(() => import('./Figures.jsx'))
+const Guide = lazy(() => import('./Guide.jsx'))
+const Album = lazy(() => import('./Album.jsx'))
+const Videos = lazy(() => import('./Videos.jsx'))
+const MapSection = lazy(() => import('./MapSection.jsx'))
 import { nav, chapters, gateHistory, stats, places, eras, people, tastes, credits } from './data.js'
 import { PalmGrove, Palm } from './art.jsx'
 import { subscribe, clamp, smooth } from './scroll.js'
-import { createScene } from './scene.js'
+const createScene = (...a) => import('./scene.js').then((m) => m.createScene(...a))
 
 const ar = (n) => String(n).replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[d])
 const pad = (n) => String(n).padStart(2, '0')
@@ -712,14 +717,14 @@ function People() {
   )
 }
 
-const TIMG = ['t-dates.jpg', 't-masgouf.jpg', 't-loomi.jpg', 'mashoof.jpg', 't-mudhif.jpg']
+const TIMG = ['food-masgouf.jpg', 'food-sayadiyah.jpg', 'food-qouzi.jpg', 'food-tashreeb.jpg', 'food-biryani.jpg', 'food-dolma.jpg', 'food-tepsi.jpg']
 function Culture() {
   const [tc, setTc] = useState(0)
   return (
     <section className="sec culture" id="culture">
       <div className="wrap cu-head">
-        <p className="rv"><b>٠٧</b><i />الذوق والحِرَف</p>
-        <h2 className="h2 rv" style={{ '--d': '80ms' }}>طعم الجنوب وحِرفه</h2>
+        <p className="rv"><b>٠٧</b><i />الذوق</p>
+        <h2 className="h2 rv" style={{ '--d': '80ms' }}>طعم الجنوب</h2>
       </div>
       <div className="wrap cu-row" onMouseLeave={() => setTc(tc)}>
         {tastes.map((t, i) => (
@@ -779,14 +784,19 @@ function Footer() {
               <figcaption><i />بدر شاكر السيّاب · أنشودة المطر</figcaption>
             </figure>
             <nav className="ftd-nav" aria-label="روابط">
-              {nav.map((n, i) => (<a key={n.href} href={n.href}><small>{ar(pad(i + 1))}</small><span>{n.label}</span><i aria-hidden="true">←</i></a>))}
+              {[...nav, { href: '#guide', label: 'الدليل السياحي' }, { href: '#album', label: 'ألبوم الصور' }, { href: '#videos', label: 'فيديوهات' }, { href: '#map', label: 'خريطة البصرة' }].map((n, i) => (<a key={n.href} href={n.href}><small>{ar(pad(i + 1))}</small><span>{n.label}</span><i aria-hidden="true">←</i></a>))}
               <a href="#top" className="ftd-top"><small>↑</small><span>عُد إلى بداية الرحلة</span><i aria-hidden="true">←</i></a>
             </nav>
           </div>
         </div>
         <div className="ftd-bot">
-          <p className="ft-made">Made by Iraqi hands</p>
-          <a className="ft-dj" href="https://dijlah.org/" target="_blank" rel="noopener noreferrer">dijlah</a>
+          <div className="fb-made"><span>صُنع بأيدٍ عراقية</span><i aria-hidden="true" /><em>Made by Iraqi hands</em></div>
+          <span className="fb-copy">© {new Date().getFullYear()} البصرة · منذ ٦٣٦م</span>
+          <a className="fb-dj" href="https://dijlah.org/" target="_blank" rel="noopener noreferrer" aria-label="تطوير dijlah">
+            <span className="fb-dj-l">تطوير</span>
+            <i aria-hidden="true" />
+            <em>dijlah<svg viewBox="0 0 24 24" width="12" height="12" aria-hidden="true"><path d="M7 17L17 7M8 7h9v9" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" /></svg></em>
+          </a>
         </div>
       </footer>
     </>
@@ -887,7 +897,7 @@ function Gate() {
           <p className="gx-sub">حيث يلتقي النهران</p>
         </div>
         <div className="gx-cue">
-          <span>SCROLL TO EXPLORE</span>
+          <span>صُنع بأيدٍ عراقية</span>
           <i />
         </div>
       </div>
@@ -909,7 +919,14 @@ export default function App() {
         <History />
         <People />
         <Culture />
-        <Folklore />
+        <Suspense fallback={null}>
+          <Folklore />
+          <Figures />
+          <Guide />
+          <Album />
+          <Videos />
+          <MapSection />
+        </Suspense>
       </main>
       <Footer />
     </>

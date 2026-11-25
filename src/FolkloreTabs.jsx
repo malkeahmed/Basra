@@ -7,6 +7,7 @@ import './folkloreTabs.css'
 const A = (f) => './assets/' + f
 const still = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
 const COUNT = folklore.length
+const num = (n) => String(n).padStart(2, '0').replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[d])
 /* موضع الصورة من المنتصف، في حلقة من خمس: ‎-2 إلى 2 */
 const offset = (i, at, n) => ((i - at + n + Math.floor(n / 2)) % n) - Math.floor(n / 2)
 
@@ -252,6 +253,9 @@ export default function FolkloreTabs() {
       </div>
 
       <div className="ft7-inner">
+        <div className="ft7-marquee" aria-hidden="true" key={'m' + t}>
+          <span>{Array(6).fill(topic.short).join(' ✦ ')} ✦ </span><span>{Array(6).fill(topic.short).join(' ✦ ')} ✦ </span>
+        </div>
         <div className="ft7-tabs" ref={tabs} role="tablist" aria-label="أبواب الفلكلور" onKeyDown={onTabKey}>
           <i className="ft7-pill" ref={pill} aria-hidden="true" />
           {folklore.map((f, i) => (
@@ -279,20 +283,21 @@ export default function FolkloreTabs() {
           </div>
 
           <div className="ft7-foot">
-            <div className="ft7-cap" key={t + '-' + at} aria-live={playing ? 'off' : 'polite'}>
-              <strong>{item.cap}</strong>
-              <p>{item.note}</p>
-              <p className="ft7-meta"><span>{item.place}</span></p>
+            <div className="ft7-cap" key={'c' + t + '-' + at}>
+              <p className="ft7-meta"><b>{num(at + 1)}</b><i />{num(topic.items.length)}<span>{item.place}</span></p>
+              <p className="ft7-note">{item.note}</p>
             </div>
             <div className="ft7-controls">
-              <div className="ft7-thumbs">
+              <ol className="ft7-index">
                 {topic.items.map((it, i) => (
-                  <button key={it.img} type="button" className={i === at ? 'on' : ''} onClick={() => pick(i)} aria-label={it.cap} aria-current={i === at || undefined}>
-                    <img src={A(it.img)} alt="" draggable="false" />
-                    {i === at && playing && <u key={t + '-' + at} onAnimationEnd={advance} />}
-                  </button>
+                  <li key={it.img}>
+                    <button type="button" className={i === at ? 'on' : ''} onClick={() => pick(i)} aria-current={i === at || undefined}>
+                      <i>{num(i + 1)}</i><span>{it.cap}</span>
+                      {i === at && playing && <u key={t + '-' + at} onAnimationEnd={advance} />}
+                    </button>
+                  </li>
                 ))}
-              </div>
+              </ol>
               <button type="button" className="ft7-round ft7-play" onClick={() => setPlaying(!playing)} aria-label={playing ? 'إيقاف العرض' : 'تشغيل العرض'}>
                 <Icon d={playing ? 'M7 4v12M13 4v12' : 'M7 4l8 6-8 6z'} />
               </button>

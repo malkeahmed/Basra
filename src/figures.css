@@ -1,0 +1,75 @@
+/* ===== شخصيات البصرة: معرض فاتح، عكس في الوسط ولوحة تعريف وفهرس ===== */
+.fg { --ink: #14120f; --paper: #eeeae2; --mute: rgba(20, 18, 15, .5); --hair: rgba(20, 18, 15, .16); --fg-out: cubic-bezier(.22, 1, .36, 1); --fg-io: cubic-bezier(.65, 0, .35, 1); position: relative; background: var(--paper); color: var(--ink); }
+.fg-stage { position: relative; height: calc(100svh - var(--nav, 0px)); min-height: 640px; max-height: 960px; overflow: hidden; display: flex; flex-direction: column; padding: 0 clamp(20px, 5vw, 84px); }
+
+.fg-top { flex: none; display: flex; justify-content: space-between; align-items: center; padding: clamp(14px, 2.6vh, 26px) 0; border-bottom: 1px solid var(--hair); font: 500 .95rem var(--f-text); color: var(--mute); }
+.fg-count { font-family: var(--f-kufi); letter-spacing: .1em; }
+.fg-count b { color: var(--ink); font-size: 1.15em; }
+
+.fg-body { position: relative; flex: 1; min-height: 0; container-type: inline-size; overflow: hidden; }
+
+/* نقش هندسي: بلاط نجمة وصليب، طبقة حبر هادئة وطبقة ذهب تتجوّل وتتبع المؤشر */
+.fg-geos { position: absolute; inset: 0; pointer-events: none; animation: fg-geo-in 1.6s var(--fg-out) both; }
+.fg-geo { position: absolute; inset: 0; width: 100%; height: 100%; }
+.fg-geo path { vector-effect: non-scaling-stroke; }
+.fg-geo.base { -webkit-mask-image: radial-gradient(ellipse 85% 95% at 50% 46%, #000 25%, transparent 100%); mask-image: radial-gradient(ellipse 85% 95% at 50% 46%, #000 25%, transparent 100%); }
+.fg-geo.base path { stroke: rgba(20, 18, 15, .09); stroke-width: 1; }
+.fg-geo.lit { --mx: 50%; --my: 50%; -webkit-mask-image: radial-gradient(circle closest-side, #000 0, transparent 100%); mask-image: radial-gradient(circle closest-side, #000 0, transparent 100%); -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-size: 700px 700px; mask-size: 700px 700px; animation: fg-roam 16s ease-in-out infinite alternate; }
+.fg-geo.lit path { stroke: #a9742f; stroke-opacity: .5; stroke-width: 1.4; }
+.fg-body[data-hov] .fg-geo.lit { animation: none; -webkit-mask-position: calc(var(--mx) - 350px) calc(var(--my) - 350px); mask-position: calc(var(--mx) - 350px) calc(var(--my) - 350px); }
+@keyframes fg-roam { from { -webkit-mask-position: 0% 10%; mask-position: 0% 10%; } 50% { -webkit-mask-position: 60% 95%; mask-position: 60% 95%; } to { -webkit-mask-position: 100% 20%; mask-position: 100% 20%; } }
+@keyframes fg-geo-in { from { opacity: 0; clip-path: circle(0% at 50% 46%); } to { opacity: 1; clip-path: circle(150% at 50% 46%); } }
+
+/* الصورة في الوسط */
+.fg-fig { position: absolute; z-index: 2; left: 50%; top: 46%; margin: 0; width: min(32vw, 52vh * .8, 440px); transform: translate(-50%, -50%) translateY(calc((var(--q, 0) - .5) * -4vh)); }
+.fg-frame { position: relative; aspect-ratio: 4 / 5; overflow: hidden; border-radius: 4px; background: #cfc8ba; box-shadow: 0 30px 80px rgba(20, 18, 15, .28); }
+.fg-ph { position: absolute; inset: 0; opacity: 0; transition: opacity 1.1s var(--fg-io); }
+.fg-ph.on { opacity: 1; }
+.fg-ph img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 22%; filter: grayscale(.9) contrast(1.1); transform: scale(1.08); transition: filter .8s, transform 2.4s var(--fg-out); }
+.fg-ph.on img { transform: scale(1); }
+.fg-fig:hover .fg-ph.on img { filter: none; }
+.fg-ph:has(.fg-letter) { background: var(--ink); }
+.fg-letter { position: absolute; inset: 0; display: grid; place-items: center; padding-bottom: .14em; font: 200 clamp(10rem, 40vh, 26rem)/1 var(--f-text); color: #e2c27c; }
+.fg-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* لوحة التعريف */
+/* لوحة التعريف: كل الشخصيات متراكبة، والنشطة فقط تظهر بنعومة */
+.fg-plate { z-index: 3; padding: 14px 20px; background: var(--paper); position: absolute; inset-inline-start: 0; bottom: 0; max-width: 34cqw; display: grid; }
+.fg-pl { grid-area: 1 / 1; display: flex; flex-direction: column; gap: clamp(6px, 1.2vh, 12px); opacity: 0; transform: translateY(14px); transition: opacity .8s var(--fg-io), transform 1s var(--fg-out); pointer-events: none; }
+.fg-pl.on { opacity: 1; transform: none; transition-delay: .15s; pointer-events: auto; }
+.fg-field { margin: 0; display: flex; align-items: center; gap: 14px; font: 700 clamp(1.5rem, 3.2vw, 3rem)/1.1 var(--f-text); letter-spacing: -.02em; color: #8a5a22; }
+.fg-field::after { content: ''; flex: 1; min-width: 30px; height: 1.5px; background: currentColor; transform-origin: right; animation: fg-draw 1s .3s var(--fg-out) both; }
+.fg-yrs { margin: 0; display: flex; align-items: baseline; gap: 12px; direction: rtl; unicode-bidi: isolate; font: 300 clamp(1.1rem, 1.9vw, 1.8rem)/1.2 var(--f-kufi); letter-spacing: .02em; color: var(--ink); white-space: nowrap; }
+.fg-yrs i { width: clamp(20px, 3vw, 44px); height: 1px; background: var(--ink); align-self: center; }
+.fg-tx { z-index: 3; padding: 14px 20px; background: var(--paper); position: absolute; inset-inline-end: 0; bottom: 0; width: min(34cqw, 46ch); display: grid; }
+.fg-t { grid-area: 1 / 1; margin: 0; text-align: start; font: 500 clamp(.9rem, 1.05vw, 1.05rem)/1.8 var(--f-text); color: rgba(20, 18, 15, .85); opacity: 0; transform: translateY(14px); transition: opacity .8s var(--fg-io), transform 1s var(--fg-out); }
+.fg-t.on { opacity: 1; transform: none; transition-delay: .25s; }
+@keyframes fg-up { from { opacity: 0; transform: translateY(18px); } }
+@keyframes fg-draw { from { transform: scaleX(0); } }
+
+/* الفهرس السفلي */
+.fg-index { position: relative; flex: none; display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); border-top: 1px solid var(--hair); margin-top: clamp(10px, 2vh, 22px); }
+.fg-index button { all: unset; box-sizing: border-box; cursor: pointer; display: flex; flex-direction: column; gap: 4px; padding: clamp(12px, 2vh, 20px) 6px clamp(14px, 2.6vh, 26px); color: rgba(20, 18, 15, .35); font: 500 clamp(.8rem, 1.05vw, 1rem)/1.4 var(--f-text); transition: color .6s var(--fg-io); }
+.fg-index button:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; }
+.fg-index i { font: 600 .72rem var(--f-kufi); font-style: normal; letter-spacing: .14em; }
+.fg-index span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fg-index button:hover { color: var(--ink); }
+.fg-index button.past { color: rgba(20, 18, 15, .55); }
+.fg-index button.on { color: var(--ink); font-weight: 700; }
+.fg-line { position: absolute; top: -1px; inset-inline-start: 0; height: 3px; width: calc(100% / var(--n)); background: var(--ink); text-decoration: none; transition: transform 1s var(--fg-io); transform: translateX(calc(var(--at, 0) * -100%)); }
+
+@media (max-width: 860px) {
+  .fg-fig { width: min(52vw, 36vh * .8); top: 38%; }
+  .fg-plate { max-width: 46%; }
+  .fg-field { font-size: 1.25rem; }
+  .fg-yrs { font-size: .95rem; gap: 8px; }
+  .fg-tx { width: 48%; font-size: .8rem; line-height: 1.6; }
+  .fg-index button i, .fg-index span { display: none; }
+  .fg-index button { padding: 14px 0; }
+  .fg-index button::after { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; margin-inline: auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fg-geos, .fg-geo.lit { animation: none; }
+  .fg-ph, .fg-ph img, .fg-line, .fg-pl, .fg-t { transition: none; }
+  .fg-plate, .fg-field::after, .fg-tx { animation: none; }
+}

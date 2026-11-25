@@ -317,11 +317,11 @@ export async function createScene(canvas, { low = false } = {}) {
       mc.port2.postMessage(0)
     })
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: !low, alpha: false, powerPreference: 'high-performance' })
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, low ? 1.25 : 1.5))
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, low ? 1 : 1.25))
   renderer.setClearColor(SKY_HAZE)
   if (!low) {
     renderer.shadowMap.enabled = true
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap
+    renderer.shadowMap.type = THREE.PCFShadowMap
   }
 
   const scene = new THREE.Scene()
@@ -336,7 +336,7 @@ export async function createScene(canvas, { low = false } = {}) {
   sun.position.set(-50, 60, 20)
   if (!low) {
     sun.castShadow = true
-    sun.shadow.mapSize.set(2048, 2048)
+    sun.shadow.mapSize.set(1024, 1024)
     const sc = sun.shadow.camera
     sc.left = -80
     sc.right = 80
@@ -925,7 +925,7 @@ export async function createScene(canvas, { low = false } = {}) {
   function applyQuality(l) {
     quality = l
     const dpr = window.devicePixelRatio || 1
-    renderer.setPixelRatio([Math.min(dpr, low ? 1.25 : 1.5), Math.min(dpr, 1.0), 0.75][l])
+    renderer.setPixelRatio([Math.min(dpr, low ? 1 : 1.25), Math.min(dpr, 1.0), 0.75][l])
     document.body.classList.toggle('lowfx', l >= 1)
     const sh = l === 0 && !low
     renderer.shadowMap.enabled = sh
@@ -1055,7 +1055,7 @@ export async function createScene(canvas, { low = false } = {}) {
       accT += dtm
       accN++
       if (accN >= 40) {
-        if (now - tBoot > 5000 && accT / accN > 25 && quality < 2) applyQuality(quality + 1)
+        if (now - tBoot > 2500 && accT / accN > 22 && quality < 2) applyQuality(quality + 1)
         accT = 0
         accN = 0
       }

@@ -1,0 +1,90 @@
+/* قسم الفيديو بأسلوب آبل */
+.vx { --cw: min(1080px, 78vw); --ease: cubic-bezier(.28, .11, .32, 1); --spring: cubic-bezier(.34, 1.3, .64, 1); position: relative; overflow: hidden; background: #000; color: #f5f5f7; font-family: "IBM Plex Sans Arabic", system-ui, sans-serif; padding: clamp(90px, 14vh, 160px) 0 clamp(80px, 12vh, 130px); -webkit-font-smoothing: antialiased; }
+.vx button { font: inherit; }
+.vx > *:not(.vx-bg):not(.vx-lb) { position: relative; z-index: 1; }
+
+/* الخلفية: صورة المقطع الحالي ضبابية وعميقة، مع توهّج وحبيبات فيلم وتلاشٍ في الأطراف */
+.vx-bg { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; background: #050506; }
+.vx-bg img { position: absolute; inset: -12%; width: 124%; height: 124%; object-fit: cover; opacity: 0; filter: blur(70px) saturate(1.5) brightness(.55); transform: scale(1.1); transition: opacity 1.6s var(--ease), transform 9s linear; }
+.vx-bg img.on { opacity: .75; transform: scale(1); }
+.vx-glow { position: absolute; inset: 0; background: radial-gradient(ellipse 60% 45% at 50% 62%, rgba(255, 255, 255, .07), transparent 70%), radial-gradient(ellipse 80% 60% at 50% 100%, rgba(0, 0, 0, .7), transparent 70%), linear-gradient(180deg, #000 0%, rgba(0, 0, 0, .35) 22%, rgba(0, 0, 0, .25) 70%, #000 100%); }
+.vx-grain { position: absolute; inset: 0; opacity: .08; mix-blend-mode: overlay; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); }
+
+/* العنوان: مثل عنوان ألبوم الصور، كلمة بين خطّين رفيعين يمتدّان مع التمرير */
+.vx-hd { --p: 0; padding-inline: var(--margin, 24px); margin-bottom: clamp(36px, 7vh, 72px); }
+.vx-hd h2 { display: flex; align-items: center; justify-content: center; gap: clamp(18px, 3vw, 44px); width: min(100%, 1100px); margin: 0 auto; color: #fff; font-family: "IBM Plex Sans Arabic", sans-serif; font-weight: 800; font-size: clamp(2.4rem, 5.2vw, 4.6rem); line-height: 1.3; letter-spacing: -.02em; }
+.vx-hd h2 b { flex: none; font-weight: 800; opacity: var(--p); transform: translateY(calc((1 - var(--p)) * 40px)); }
+.vx-hd h2::before, .vx-hd h2::after { content: ""; flex: 1; height: 1px; background: rgba(255, 255, 255, .32); transform: scaleX(var(--p)); }
+.vx-hd h2::before { transform-origin: left; }
+.vx-hd h2::after { transform-origin: right; }
+
+/* الشريط */
+.vx-track { display: flex; gap: clamp(12px, 1.6vw, 22px); overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scrollbar-width: none; padding: 10px calc((100% - var(--cw)) / 2) 30px; opacity: 0; transform: translateY(40px); transition: opacity 1.2s var(--ease) .15s, transform 1.3s var(--ease) .15s; }
+.vx-track::-webkit-scrollbar { display: none; }
+.vx.in .vx-track { opacity: 1; transform: none; }
+
+.vx-card { position: relative; flex: none; width: var(--cw); aspect-ratio: 16 / 10; border-radius: clamp(22px, 2.6vw, 34px); overflow: hidden; scroll-snap-align: center; cursor: pointer; background: #1d1d1f; isolation: isolate; transform: scale(.93); opacity: .5; transition: transform .9s var(--ease), opacity .9s var(--ease); }
+.vx-card.on { transform: none; opacity: 1; }
+.vx-card img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -2; transform: scale(1.06); transition: transform 1.6s var(--ease); user-select: none; }
+.vx-card.on:hover img { transform: scale(1.0); }
+.vx-card::before { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, rgba(0, 0, 0, .62) 0%, rgba(0, 0, 0, .18) 34%, transparent 55%, rgba(0, 0, 0, .35) 100%); }
+
+.vx-txt { position: absolute; inset: clamp(22px, 3.4vw, 52px) clamp(24px, 3.6vw, 56px) auto; text-align: start; }
+.vx-txt p { margin: 0 0 8px; font-size: clamp(.8rem, 1.1vw, 1.05rem); font-weight: 600; color: rgba(255, 255, 255, .82); }
+.vx-txt h3 { margin: 0; max-width: 14em; font-size: clamp(1.7rem, 3.8vw, 3.4rem); line-height: 1.16; font-weight: 700; letter-spacing: -.02em; color: #fff; text-wrap: balance; }
+
+.vx-dur { position: absolute; inset-block-end: clamp(20px, 2.6vw, 34px); inset-inline-start: clamp(24px, 3.6vw, 56px); padding: 6px 14px; font-size: .85rem; font-weight: 600; border-radius: 99px; background: rgba(30, 30, 32, .55); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); color: #fff; }
+
+.vx-btn { all: unset; cursor: pointer; position: absolute; inset-block-end: clamp(16px, 2.2vw, 30px); inset-inline-end: clamp(18px, 2.6vw, 36px); width: clamp(46px, 4.4vw, 60px); height: clamp(46px, 4.4vw, 60px); display: grid; place-items: center; border-radius: 50%; background: rgba(30, 30, 32, .6); -webkit-backdrop-filter: blur(20px) saturate(1.6); backdrop-filter: blur(20px) saturate(1.6); color: #fff; transition: transform .5s var(--spring), background .3s, color .3s; }
+.vx-btn svg { margin-left: 2px; width: 40%; height: 40%; }
+.vx-btn:hover, .vx-btn:focus-visible { transform: scale(1.1); background: #fff; color: #000; }
+.vx-btn:focus-visible { outline: 2px solid #2997ff; outline-offset: 3px; }
+
+/* شريط التحكم: زجاجي، أسهم، عدّاد، اسم المقطع، وأقسام تقدّم */
+.vx-ctl { display: flex; justify-content: center; padding-inline: 16px; margin-top: 10px; }
+.vx-bar { display: inline-flex; align-items: center; gap: clamp(10px, 1.6vw, 22px); max-width: 100%; padding: 8px; border-radius: 99px; background: rgba(40, 40, 44, .55); -webkit-backdrop-filter: blur(28px) saturate(1.8); backdrop-filter: blur(28px) saturate(1.8); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .12), 0 24px 60px -20px rgba(0, 0, 0, .8); }
+.vx-ar, .vx-pp { all: unset; cursor: pointer; flex: none; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; color: #fff; background: rgba(255, 255, 255, .08); transition: background .3s, color .3s, transform .45s var(--spring); }
+.vx-ar:hover, .vx-pp:hover { background: #fff; color: #000; transform: scale(1.08); }
+.vx-ar:active, .vx-pp:active { transform: scale(.94); }
+.vx-ar:focus-visible, .vx-pp:focus-visible, .vx-pager button:focus-visible { outline: 2px solid #2997ff; outline-offset: 3px; }
+
+.vx-now { display: flex; flex-direction: column; gap: 2px; min-width: clamp(110px, 14vw, 190px); text-align: start; padding-inline: 4px; }
+.vx-no { display: inline-flex; align-items: baseline; gap: 5px; font: 700 .72rem ui-monospace, Consolas, monospace; letter-spacing: .12em; color: #86868b; }
+.vx-no b { color: #fff; font-size: .86rem; animation: vxtick .6s var(--ease); }
+.vx-no i { font-style: normal; opacity: .5; }
+.vx-nm { font-size: .95rem; font-weight: 600; color: #f5f5f7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; animation: vxtick .7s var(--ease); }
+@keyframes vxtick { from { opacity: 0; transform: translateY(8px) } }
+
+.vx-pager { display: inline-flex; align-items: center; gap: 6px; padding-inline: 4px; }
+.vx-pager button { all: unset; cursor: pointer; position: relative; width: clamp(22px, 3.4vw, 54px); height: 4px; border-radius: 99px; background: rgba(255, 255, 255, .22); overflow: hidden; transition: background .4s, transform .4s var(--spring); }
+.vx-pager button::after { content: ''; position: absolute; inset: -12px 0; }
+.vx-pager button:hover { background: rgba(255, 255, 255, .45); transform: scaleY(1.6); }
+.vx-pager button.done { background: rgba(255, 255, 255, .85); }
+.vx-pager button.on { background: rgba(255, 255, 255, .22); }
+.vx-pager u { position: absolute; inset: 0; background: #fff; border-radius: 99px; transform-origin: right; transform: scaleX(0); animation: vxfill linear forwards; }
+@keyframes vxfill { to { transform: scaleX(1) } }
+
+/* النافذة */
+.vx-lb { position: fixed; inset: 0; z-index: 200; display: grid; place-items: center; padding: 24px; background: rgba(0, 0, 0, .82); -webkit-backdrop-filter: blur(30px) saturate(1.4); backdrop-filter: blur(30px) saturate(1.4); animation: vxin .45s var(--ease); }
+@keyframes vxin { from { opacity: 0 } }
+.vx-wrap { width: min(1180px, 100%); animation: vxpop .6s var(--spring); }
+@keyframes vxpop { from { opacity: 0; transform: scale(.92) translateY(20px) } }
+.vx-wrap iframe, .vx-soon { display: block; width: 100%; aspect-ratio: 16 / 9; border: 0; border-radius: 22px; background: #000; overflow: hidden; }
+.vx-soon { background-size: cover; background-position: center; display: grid; place-items: center; position: relative; }
+.vx-soon::before { content: ''; position: absolute; inset: 0; background: rgba(0, 0, 0, .55); }
+.vx-soon span { position: relative; font-size: clamp(1.4rem, 3vw, 2.4rem); font-weight: 700; }
+.vx-mc { margin: 18px 6px 0; font-size: 1.05rem; color: #86868b; }
+.vx-mc b { color: #f5f5f7; font-weight: 700; margin-inline-end: 8px; }
+.vx-x { all: unset; cursor: pointer; position: fixed; top: 22px; inset-inline-end: 24px; width: 44px; height: 44px; display: grid; place-items: center; color: #fff; border-radius: 50%; background: rgba(66, 66, 69, .7); transition: background .3s, transform .4s var(--spring); }
+.vx-x:hover { background: rgba(110, 110, 114, .8); transform: scale(1.08); }
+
+@media (max-width: 700px) {
+  .vx-now { display: none; }
+  .vx-pager button { width: 22px; }
+  .vx { --cw: 86vw; }
+  .vx-card { aspect-ratio: 4 / 5; }
+  .vx-txt h3 { font-size: 1.7rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .vx-bg img, .vx-card, .vx-card img, .vx-track { transition: none; }
+}
